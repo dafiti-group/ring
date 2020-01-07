@@ -1,0 +1,354 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package br.com.dafiti.ring.module;
+
+import br.com.dafiti.ring.mask.JSONDocument;
+import br.com.dafiti.ring.mask.StorageAbstractionTemplate;
+import br.com.dafiti.ring.model.FileHandler;
+import br.com.dafiti.ring.model.ManualInput;
+import br.com.dafiti.ring.model.Metadata;
+import br.com.dafiti.ring.rest.ApiFilterDTO;
+import com.amazonaws.AmazonClientException;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectInputStream;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.transfer.TransferManager;
+import com.amazonaws.services.s3.transfer.TransferManagerBuilder;
+import com.amazonaws.services.s3.transfer.Upload;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvMapper;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema;
+import com.fasterxml.jackson.dataformat.csv.CsvSchema.Builder;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+/**
+ *
+ * @author guilherme.almeida
+ */
+public class AWSS3StorageModule extends StorageAbstractionTemplate {
+
+    private final String clientRegion;// us-east-1
+    private final String bucketName;// dft-dwh-files
+    private final String keyName; // transportation_manual_input/teste.csv
+    private final String accessKey;
+    private final String secretKey;
+
+    private AmazonS3 s3Client;
+    private TransferManager transferManager;
+
+    public AWSS3StorageModule(String clientRegion,
+            String bucketName,
+            String keyName,
+            String accessKey,
+            String secretKey) {
+        this.clientRegion = clientRegion;
+        this.bucketName = bucketName;
+        this.keyName = keyName;
+        this.accessKey = accessKey;
+        this.secretKey = secretKey;
+    }
+
+    @Override
+    public void createOrUpdateManualInput(ManualInput manualInput, boolean recreate) {
+        if (recreate) {
+            deleteManualInput(manualInput);
+        }
+    }
+
+    @Override
+    public void saveFile(ManualInput manualInput, JSONDocument JSONDoc, String LoadDateForPartition, FileHandler fileHandler) {
+        String fileContent = JSONDoc.generateDocuments(manualInput, fileHandler, LoadDateForPartition);
+
+        // get result and write JSON file
+        String outputFilePath = tmpFilePath + manualInput.getName() + "_" + manualInput.getId() + ".json.gzip";
+        File JSONFile = new File(outputFilePath);
+        if (JSONFile.exists()) {
+            JSONFile.delete();
+        }
+
+        FileOutputStream outputStream = null;
+        GZIPOutputStream gzipOutputStream = null;
+        try {
+            // write a compressed file to upload in S3
+            outputStream = new FileOutputStream(JSONFile);
+            gzipOutputStream = new GZIPOutputStream(outputStream);
+            byte[] strToBytes = fileContent.getBytes();
+            gzipOutputStream.write(strToBytes);
+        } catch (Exception e) {
+        } finally {
+            try {
+                gzipOutputStream.finish();
+                gzipOutputStream.close();
+                outputStream.close();
+            } catch (IOException ex) {
+                Logger.getLogger(AWSS3StorageModule.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        // send to S3
+        try {
+            // you may instantiate AmazonS3 Object as following if you have AWS CLI configured with de credentials located at ~/.aws/credentials
+            //s3Client = AmazonS3ClientBuilder.defaultClient();
+            BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
+            s3Client = AmazonS3ClientBuilder.standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+                    .withRegion(clientRegion)
+                    .build();
+            transferManager = TransferManagerBuilder.standard()
+                    .withS3Client(s3Client)
+                    .build();
+
+            // TransferManager processes all transfers asynchronously,
+            // so this call returns immediately.
+            String s3Path = keyName + "/" + manualInput.getName()
+                    + extractDatePathForS3(LoadDateForPartition, " ")
+                    + LoadDateForPartition.replace(" ", "_") + ".json.gzip";
+            Upload upload = transferManager.upload(bucketName, s3Path, new File(outputFilePath));
+            
+            System.out.println("Object upload started");
+
+            // Optionally, wait for the upload to finish before continuing.
+            upload.waitForCompletion();
+
+            if (upload.isDone()) {
+                System.out.println("Object upload complete");
+            } else {
+                System.out.println("Something went wrong");
+            }
+
+        } catch (AmazonClientException | InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            if (transferManager != null) {
+                transferManager.shutdownNow();
+            }
+            if (s3Client != null) {
+                s3Client.shutdown();
+            }
+        }
+
+        // delete file
+        if (JSONFile.exists()) {
+            JSONFile.delete();
+        }
+
+    }
+
+    @Override
+    public void deleteManualInput(ManualInput manualInput) {
+        try {
+            BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
+            s3Client = AmazonS3ClientBuilder.standard()
+                    .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+                    .withRegion(clientRegion)
+                    .build();
+            
+            List<S3ObjectSummary> summaries = listObjects(bucketName, keyName + "/" + manualInput.getName());
+            String[] keys = summaries.stream()
+                    .map(m -> m.getKey())
+                    .toArray(String[]::new);
+
+            DeleteObjectsRequest dor = new DeleteObjectsRequest(bucketName)
+                    .withKeys(keys);
+            s3Client.deleteObjects(dor);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            s3Client.shutdown();
+        }
+    }
+
+    @Override
+    public File extractCSV(ManualInput manualInput, ApiFilterDTO filter) throws IOException {
+
+        BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
+        s3Client = AmazonS3ClientBuilder.standard()
+                .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
+                .withRegion(clientRegion)
+                .build();
+
+        try {
+            // list files of manual Input in S3
+            List<S3ObjectSummary> summaries = listObjects(bucketName, keyName + "/" + manualInput.getName());
+
+            // maps only the keys of files to be downloaded and returned
+            List<String> keyList = summaries.stream()
+                    .filter(f -> evaluate(filter, f.getKey()))
+                    .map(m -> m.getKey())
+                    .collect(Collectors.toList());
+
+            // download and save the files in a single file
+            String outputFileExtension = ".json.gizp";
+            String outputFilePath = tmpFilePath + manualInput.getName() + "_" + manualInput.getId();
+            // set compressed json file
+            File fileToDel = new File(outputFilePath + outputFileExtension);
+            if (fileToDel.exists()) {
+                fileToDel.delete();
+            }
+            for (String key : keyList) {
+                S3Object o = s3Client.getObject(bucketName, key);
+                S3ObjectInputStream s3is = o.getObjectContent();
+                FileOutputStream fos = new FileOutputStream(new File(outputFilePath + outputFileExtension), true);
+                byte[] read_buf = new byte[1024];
+                int read_len = 0;
+                while ((read_len = s3is.read(read_buf)) > 0) {
+                    fos.write(read_buf, 0, read_len);
+                }
+                fos.close();
+            }
+            
+            // create a decompressed json file and delete compressed json file
+            decompressGzip(outputFilePath + outputFileExtension, outputFilePath + ".json");
+            
+            if (fileToDel.exists()) {
+                fileToDel.delete();
+            }
+            outputFileExtension = ".json";
+            
+            // set json file
+            fileToDel = new File(outputFilePath + outputFileExtension);
+            
+            JsonNode jsonTree = new ObjectMapper().readTree(fileToDel);
+
+            Builder csvSchemaBuilder = CsvSchema.builder();
+            for (Metadata metadata : manualInput.getMetadata()) {
+                csvSchemaBuilder.addColumn(metadata.getFieldName());
+            }
+            csvSchemaBuilder.addColumn("business_key");
+            csvSchemaBuilder.addColumn("partition_field");
+            csvSchemaBuilder.addColumn("load_date");
+            CsvSchema csvSchema = csvSchemaBuilder.build().withHeader();
+
+            outputFileExtension = ".csv";
+            
+            CsvMapper csvMapper = new CsvMapper();
+            csvMapper.writerFor(JsonNode.class)
+                    .with(csvSchema)
+                    .writeValue(new File(outputFilePath + outputFileExtension), jsonTree);
+            
+            // delete json file
+            if (fileToDel.exists()) {
+                fileToDel.delete();
+            }
+
+            return new File(outputFilePath + outputFileExtension);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public List<S3ObjectSummary> listObjects(String bucketName, String keyName) {
+        // list files of manual Input in S3
+        ObjectListing listing = s3Client.listObjects(bucketName, keyName);
+        List<S3ObjectSummary> summaries = listing.getObjectSummaries();
+
+        while (listing.isTruncated()) {
+            listing = s3Client.listNextBatchOfObjects(listing);
+            summaries.addAll(listing.getObjectSummaries());
+        }
+        return summaries;
+    }
+
+    /**
+     * 
+     */
+    private boolean evaluate(ApiFilterDTO filter, String key) {
+
+        String regex = "[0-9]{4}-[0-9]{2}-[0-9]{2}_[0-9]{2}:[0-9]{2}:[0-9]{2}\\..+";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(key);
+
+        if (!matcher.find()) {
+            return false;
+        }
+
+        String filterDate = filter.getLoadDate();
+        String loadDate = matcher.group(0).replace("_", " ").replaceAll("\\.json.*", "");
+        String operator = filter.getOperator();
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Date date1 = sdf.parse(loadDate);
+            Date date2 = sdf.parse(filterDate);
+
+            if (operator.equals("gt")) {
+                if (date1.compareTo(date2) > 0) {
+                    return true;
+                }
+            } else if (operator.equals("gte")) {
+                if (date1.compareTo(date2) > 0 || date1.compareTo(date2) == 0) {
+                    return true;
+                }
+            } else if (operator.equals("lt")) {
+                if (date1.compareTo(date2) < 0) {
+                    return true;
+                }
+            } else if (operator.equals("lte")) {
+                if (date1.compareTo(date2) < 0 || date1.compareTo(date2) == 0) {
+                    return true;
+                }
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+    
+    /**
+     * 
+     */
+    private void decompressGzip(String input, String output) throws IOException {
+        try (GZIPInputStream in = new GZIPInputStream(new FileInputStream(input))){
+            try (FileOutputStream out = new FileOutputStream(output)){
+                byte[] buffer = new byte[1024];
+                int len;
+                while((len = in.read(buffer)) != -1){
+                    out.write(buffer, 0, len);
+                }
+            }
+        }
+    }
+    
+    private String extractDatePathForS3(String DateFormatText, String splitBy) {
+        
+        String date = DateFormatText.split(splitBy)[0];
+        String[] dateParts = date.split("-");
+        String path = "";
+        
+        for(String part : dateParts) {
+            path += "/" + part;
+        }
+        
+        return path + "/";
+    }
+
+}

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+    <head lang="en" th:replace="base/header :: head">
+        <title>Ring</title>
+    </head>
+    <body>
+        
+        <th:block th:include="base/header :: navbar"></th:block>
+        
+        <div class="container-fluid main-content">
+
+            <h2>Log</h2>
+            <div class="col-sm-12">
+                <pre th:text="${log.text}" ></pre>
+                <pre th:if="${!log.status.equals('RUNNING')}" th:text="${log.status}" ></pre>
+            </div>
+        </div>
+    </body>
+</html>
