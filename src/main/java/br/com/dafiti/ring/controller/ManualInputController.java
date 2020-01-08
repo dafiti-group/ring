@@ -136,7 +136,7 @@ public class ManualInputController {
             @ModelAttribute ManualInput manualInput) {
 
         List<Metadata> metadata = manualInput.getMetadata();
-        metadataService.evaluateMetadata(metadata);
+        metadataService.refreshMetadata(metadata);
 
         model.addAttribute("manualInput", manualInput);
         boolean isMetadataValidated = metadataService.validate(metadata);

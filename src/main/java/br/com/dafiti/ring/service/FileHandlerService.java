@@ -30,8 +30,9 @@ public class FileHandlerService extends JSONDocument {
 
     @Autowired
     public FileHandlerService(ImportLogService importLogService,
-            @Value("${ring.json.file.type}") String jsonType) {
-        super(jsonType);
+            @Value("${ring.json.file.type}") String jsonType,
+            @Value("${ring.enable.native.data.validation}") boolean useNativeValidation) {
+        super(jsonType, useNativeValidation);
         this.importLogService = importLogService;
     }
 

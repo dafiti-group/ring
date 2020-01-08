@@ -79,7 +79,7 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
     }
 
     @Override
-    public void saveFile(ManualInput manualInput, JSONDocument JSONDoc, String LoadDateForPartition, FileHandler fileHandler) {
+    public void saveFile(ManualInput manualInput, JSONDocument JSONDoc, String LoadDateForPartition, FileHandler fileHandler) throws Exception {
         String fileContent = JSONDoc.generateDocuments(manualInput, fileHandler, LoadDateForPartition);
 
         // get result and write JSON file

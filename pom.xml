@@ -10,7 +10,7 @@
     </parent>
     <groupId>br.com.dafiti</groupId>
     <artifactId>ring</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <!--<packaging>war</packaging>-->
     <name>ring</name>
     <description>Ring project for Spring Boot</description>
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
-            <!--<scope>provided</scope> -->
+            <!--<scope>provided</scope>-->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -189,11 +189,11 @@
         
         <!-- Guava Cache -->  
           
-        <dependency>
+        <!--<dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
             <version>24.0-jre</version>
-        </dependency>
+        </dependency>-->
         
         <dependency>
             <groupId>org.springframework.boot</groupId>

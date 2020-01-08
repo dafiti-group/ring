@@ -129,7 +129,7 @@ public class ConfigurationService {
         this.save(new Configuration(
                 "Host",
                 "EMAIL_HOST",
-                "",
+                "smtp.gmail.com",
                 "text",
                 emailGroup,
                 10,
@@ -139,7 +139,7 @@ public class ConfigurationService {
         this.save(new Configuration(
                 "Port",
                 "EMAIL_PORT",
-                "",
+                "587",
                 "number",
                 emailGroup,
                 0,
@@ -166,18 +166,6 @@ public class ConfigurationService {
                 50,
                 "*"), true);
 
-        //Slack configuration.
-        ConfigurationGroup slackGroup = new ConfigurationGroup("Slack");
-        this.configurationGroupService.save(slackGroup, true);
-        this.save(new Configuration(
-                "Default channel",
-                "SLACK_CHANNEL",
-                "",
-                "text",
-                slackGroup,
-                5,
-                255,
-                "*"), true);
 
         //Generic configuration.
         ConfigurationGroup others = new ConfigurationGroup("Others");
@@ -192,17 +180,5 @@ public class ConfigurationService {
                 365,
                 "*"), true);
 
-        //Maximun number of tables to display on workbench.
-        ConfigurationGroup workbench = new ConfigurationGroup("Workbench");
-        this.configurationGroupService.save(workbench, true);
-        this.save(new Configuration(
-                "Maximum entity number allowed",
-                "WORKBENCH_MAX_ENTITY_NUMBER",
-                "5000",
-                "number",
-                workbench,
-                100,
-                50000,
-                "*"), true);
     }
 }

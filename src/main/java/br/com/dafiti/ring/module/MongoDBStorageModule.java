@@ -99,7 +99,7 @@ public class MongoDBStorageModule extends StorageAbstractionTemplate {
     public void saveFile(ManualInput manualInput
             , JSONDocument JSONDoc
             , String LoadDateForPartition
-            , FileHandler fileHandler) {
+            , FileHandler fileHandler) throws Exception {
      
         MongoDocumentsGenerator mongoDocumentsGenerator = new MongoDocumentsGenerator();
         JSONDoc.generateDocuments(manualInput, fileHandler, LoadDateForPartition, mongoDocumentsGenerator);

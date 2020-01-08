@@ -14,7 +14,6 @@ import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -94,6 +93,10 @@ public class ManualInputService {
      */
     public ManualInput findById(Long id) {
         return manualInputRepository.findById(id).get();
+    }
+    
+    public List<ManualInput> findByNameContaining(String search) {
+        return manualInputRepository.findByNameContaining(search);
     }
 
     /**

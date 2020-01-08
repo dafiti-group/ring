@@ -8,12 +8,17 @@ package br.com.dafiti.ring.mask;
 import br.com.dafiti.ring.model.FileHandler;
 import br.com.dafiti.ring.model.ManualInput;
 import br.com.dafiti.ring.model.Metadata;
+import br.com.dafiti.ring.option.Conditional;
 import br.com.dafiti.ring.option.DataType;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -21,17 +26,19 @@ import java.util.stream.Collectors;
  * @author guilherme.almeida
  */
 public class JSONDocument {
-    
+
     private final String jsonType;
     protected String lineSeparator;
-    
-    public JSONDocument(String jsonType) {
+    protected boolean useNativeValidation;
+
+    public JSONDocument(String jsonType, boolean useNativeValidation) {
         this.jsonType = jsonType.toLowerCase();
-        if(this.jsonType.equals("jsonarray")) {
+        if (this.jsonType.equals("jsonarray")) {
             lineSeparator = ",";
         } else {
             lineSeparator = "\n";
         }
+        this.useNativeValidation = useNativeValidation;
     }
 
     /**
@@ -39,8 +46,9 @@ public class JSONDocument {
      * @param file
      * @param loadDate
      * @return
+     * @throws java.lang.Exception
      */
-    public String generateDocuments(ManualInput manualInput, FileHandler file, String loadDate) {
+    public String generateDocuments(ManualInput manualInput, FileHandler file, String loadDate) throws Exception {
 
         // String of documents to return in the end of function
         StringBuilder documents = new StringBuilder();
@@ -73,7 +81,7 @@ public class JSONDocument {
         // the 3 aditional fields refers to the default columns to generate tables and collections for manual input
         // partition_field, business_ley and load_date
         String[] jsonLine = new String[metadataList.size() + 3];
-        
+
         int fileRowQty = file.getData().size();
 
         for (int line = 0; line < fileRowQty; line++) {
@@ -94,6 +102,16 @@ public class JSONDocument {
 
                 if (metadataList.get(metadataList.indexOf(metadata)).getIsBusinessKey()) {
                     businessKey += value;
+                }
+                if(useNativeValidation) {
+                    boolean valid = validate(value, dt, metadata.getTest(), metadata.getThreshold());
+                    if(!valid) {
+                        throw new Exception("ERROR: error validating data - field: " + field
+                                + ", value: " + value
+                                + ", data type: " + dt.toString()
+                                + ", test: " + metadata.getTest().toString()
+                                + ", threshold: " + metadata.getThreshold());
+                    }
                 }
                 // validate numerical data type
                 // I chose write a json string to be easer to understand
@@ -130,15 +148,14 @@ public class JSONDocument {
 
             try {
                 documents.append(jsonToParse);
-                if(line < fileRowQty - 1) {
+                if (line < fileRowQty - 1) {
                     documents.append(this.lineSeparator);
                 }
             } catch (Exception e) {
                 return null;
             }
         }
-        
-        
+
         return documents.append(this.jsonType.equals("jsonarray") ? "]" : "\n").toString();
     }
 
@@ -147,8 +164,9 @@ public class JSONDocument {
      * @param file
      * @param loadDate
      * @param listObjectGenerator
+     * @throws java.lang.Exception
      */
-    public void generateDocuments(ManualInput manualInput, FileHandler file, String loadDate, ListObjectGenerator listObjectGenerator) {
+    public void generateDocuments(ManualInput manualInput, FileHandler file, String loadDate, ListObjectGenerator listObjectGenerator) throws Exception {
 
         // get the header of the file as list to be easer to work with
         List<String> header = Arrays.asList(file.getHeader());
@@ -197,6 +215,16 @@ public class JSONDocument {
                 if (metadataList.get(metadataList.indexOf(metadata)).getIsBusinessKey()) {
                     businessKey += value;
                 }
+                if(useNativeValidation) {
+                    boolean valid = validate(value, dt, metadata.getTest(), metadata.getThreshold());
+                    if(!valid) {
+                        throw new Exception("ERROR: error validating data - field: " + field
+                                + ", value: " + value
+                                + ", data type: " + dt.toString()
+                                + ", test: " + metadata.getTest().toString()
+                                + ", threshold: " + metadata.getThreshold());
+                    }
+                }
                 // validate numerical data type
                 // I chose write a json string to be easer to understand
                 try {
@@ -238,6 +266,111 @@ public class JSONDocument {
             }
         }
 
+    }
+
+    /**
+     *
+     * @param value
+     * @param dataType
+     * @param conditional
+     * @param threshold
+     * @return 
+     * @throws java.lang.Exception 
+     */
+    private boolean validate(String value, DataType dataType, Conditional conditional, String threshold) throws Exception {
+        
+        if (conditional.equals(Conditional.NONE)) {
+            return true;
+        }
+
+        if (dataType.equals(DataType.TEXT)) {
+            switch (conditional) {
+                case EQUAL:
+                    return value.equals(threshold);
+                case NOT_EQUAL:
+                    return !value.equals(threshold);
+                case CONTAINS:
+                    return value.contains(threshold);
+                case NOT_CONTAINS:
+                    return !value.contains(threshold);
+                case IN:
+                    return Arrays.asList(threshold.split(",")).stream()
+                            .map(m -> m.trim())
+                            .collect(Collectors.toList())
+                            .contains(value);
+                case NOT_IN:
+                    return !Arrays.asList(threshold.split(",")).stream()
+                            .map(m -> m.trim())
+                            .collect(Collectors.toList())
+                            .contains(value);
+                case REGEX:
+                    Pattern pattern = Pattern.compile(threshold);
+                    Matcher matcher = pattern.matcher(value);
+                    return matcher.find();
+            }
+        } else if (dataType.equals(DataType.DECIMAL) || dataType.equals(DataType.INTEGER)) {
+            Float number = null;
+            Float numThreshold = null;
+            try {
+                number = Float.parseFloat(value);
+                if (!conditional.equals(Conditional.IN) && !conditional.equals(Conditional.NOT_IN)) {
+                    numThreshold = Float.parseFloat(threshold);
+                }
+            } catch (Exception e) {
+                return false;
+            }
+            switch (conditional) {
+                case EQUAL:
+                    return number == numThreshold;
+                case NOT_EQUAL:
+                    return !(number == numThreshold);
+                case LOWER_THAN:
+                    return number < numThreshold;
+                case LOWER_THAN_OR_EQUAL:
+                    return number <= numThreshold;
+                case GREATER_THAN:
+                    return number > numThreshold;
+                case GREATER_THAN_OR_EQUAL:
+                    return number >= numThreshold;
+                case IN:
+                    return Arrays.asList(threshold.split(",")).stream()
+                            .map(m -> Float.parseFloat(m))
+                            .collect(Collectors.toList())
+                            .contains(number);
+                case NOT_IN:
+                    return !Arrays.asList(threshold.split(",")).stream()
+                            .map(m -> Float.parseFloat(m))
+                            .collect(Collectors.toList())
+                            .contains(number);
+            }
+        } else if (dataType.equals(DataType.DATE) || dataType.equals(DataType.DATE_AND_TIME)) {
+            String format = "";
+            if (dataType.equals(DataType.DATE_AND_TIME)) {
+                format = "yyyy-MM-dd HH:mm:ss";
+            } else {
+                format = "yyyy-MM-dd";
+            }
+            SimpleDateFormat sdf = new SimpleDateFormat(format);
+            Date date1 = sdf.parse(value);
+            Date date2 = sdf.parse(threshold);
+
+            switch (conditional) {
+                case EQUAL:
+                    return date1.compareTo(date2) == 0;
+                case NOT_EQUAL:
+                    return !(date1.compareTo(date2) == 0);
+                case LOWER_THAN:
+                    return date1.compareTo(date2) < 0;
+                case LOWER_THAN_OR_EQUAL:
+                    return date1.compareTo(date2) < 0 || date1.compareTo(date2) == 0;
+                case GREATER_THAN:
+                    return date1.compareTo(date2) > 0;
+                case GREATER_THAN_OR_EQUAL:
+                    return date1.compareTo(date2) > 0 || date1.compareTo(date2) == 0;
+            }
+        }
+
+        return false;
     }
 
 }

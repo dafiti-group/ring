@@ -38,6 +38,7 @@ public class MetadataService {
      */
     public boolean validate(List<Metadata> metadatas) {
 
+        // get active field names that appears twice
         List<String> activeFieldsDuplicated = metadatas.stream()
                 .filter(f -> f.getIsActive())
                 .collect(Collectors.groupingBy(g -> g.getFieldName(), Collectors.counting()))
@@ -46,10 +47,12 @@ public class MetadataService {
                 .map(m -> m.getKey())
                 .collect(Collectors.toList());
 
+        // validate if user is tring to add 2 fields with the same name
         if (activeFieldsDuplicated.size() > 1) {
             return false;
         }
 
+        // get  field names that appears twice, wheter it's active or not
         List<String> duplicatedFields = metadatas.stream()
                 .collect(Collectors.groupingBy(g -> g.getFieldName(), Collectors.counting()))
                 .entrySet().stream()
@@ -198,7 +201,7 @@ public class MetadataService {
      *
      * @param metadata
      */
-    public void evaluateMetadata(List<Metadata> metadata) {
+    public void refreshMetadata(List<Metadata> metadata) {
 
         for (int i = 0; i < metadata.size(); i++) {
             Metadata mtdt = metadata.get(i);

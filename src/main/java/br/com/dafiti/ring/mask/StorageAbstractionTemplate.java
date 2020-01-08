@@ -21,7 +21,7 @@ public abstract class StorageAbstractionTemplate {
 
     public abstract void createOrUpdateManualInput(ManualInput manualInput, boolean recreate);
 
-    public abstract void saveFile(ManualInput manualInput, JSONDocument JSONDoc, String LoadDateForPartition, FileHandler fileHandler);
+    public abstract void saveFile(ManualInput manualInput, JSONDocument JSONDoc, String LoadDateForPartition, FileHandler fileHandler) throws Exception;
 
     public abstract void deleteManualInput(ManualInput manualInput);
 
