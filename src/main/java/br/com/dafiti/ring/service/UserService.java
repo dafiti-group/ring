@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Dafiti Group
+ * Copyright (c) 2020 Dafiti Group
  * 
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -250,7 +250,7 @@ public class UserService implements UserDetailsService {
         user = this.save(user);
 
         if (user != null) {
-            Blueprint blueprint = new Blueprint(user.getEmail(), "Hanger - Reset password", "resetPassword");
+            Blueprint blueprint = new Blueprint(user.getEmail(), "Ring - Reset password", "resetPassword");
             blueprint.addVariable("name", user.getFirstName());
             blueprint.addVariable("username", user.getUsername());
             blueprint.addVariable("password", rawPassword);

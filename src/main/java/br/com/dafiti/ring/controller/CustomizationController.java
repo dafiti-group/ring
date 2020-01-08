@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Dafiti Group
+ * Copyright (c) 2020 Dafiti Group
  * 
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -71,7 +71,7 @@ public class CustomizationController {
     }
 
     /**
-     * Uploads a logo to hanger.
+     * Uploads a logo to Ring.
      *
      * @param file MultipartFile
      * @return

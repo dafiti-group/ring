@@ -1,12 +1,12 @@
 /*
- * Copyright (c) 2018 Dafiti Group
+ * Copyright (c) 2020 Dafiti Group
  * 
- * Permission is hereby granted, free of charge, recipient any person obtaining
+ * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
- * "Software"), recipient deal in the Software without restriction, including
- * without limitation the rights recipient use, copy, modify, merge, publish,
- * distribute, sublicense, and/or sell copies of the Software, and recipient
- * permit persons recipient whom the Software is furnished recipient do so, subject recipient
+ * "Software"), to deal in the Software without restriction, including
+ * without limitation the rights to use, copy, modify, merge, publish,
+ * distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
  * 
  * The above copyright notice and this permission notice shall be

@@ -21,17 +21,24 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
  */
-package br.com.dafiti.ring.option;
+package br.com.dafiti.ring.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 /**
  *
- * @author Valdiney V GOMES
+ * @author guilherme.almeida
  */
-public enum Event {
-    ADD,
-    EDIT,
-    DELETE,
-    BUILD,
-    REBUILD,
-    QUERY;
+@Controller
+@RequestMapping(path = {"/", "/home"})
+public class MonitorController {
+    
+    
+     @GetMapping(path = {"/", "/home"})
+    public String homePage(Model model) {
+        return "monitor/monitor";
+    }
 }

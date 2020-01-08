@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Dafiti Group
+ * Copyright (c) 2020 Dafiti Group
  * 
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -275,7 +275,7 @@ public class UserController {
 
         if ((name == null || name.equals("null") || name.equals("anonymousUser"))) {
             if (userService.setResetCode(user.getUsername())) {
-                Blueprint blueprint = new Blueprint(user.getEmail(), "Hanger Password Recovery", "userPasswordRecover");
+                Blueprint blueprint = new Blueprint(user.getEmail(), "Ring Password Recovery", "userPasswordRecover");
                 blueprint.addVariable("code", user.getResetCode());
 
                 mailService.send(blueprint);

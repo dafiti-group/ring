@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018 Dafiti Group
+ * Copyright (c) 2020 Dafiti Group
  * 
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -149,7 +149,7 @@ public class ConfigurationService {
         this.save(new Configuration(
                 "Address",
                 "EMAIL_ADDRESS",
-                "hanger.manager@dafiti.com.br",
+                "ring.manager@dafiti.com.br",
                 "text",
                 emailGroup,
                 10,
