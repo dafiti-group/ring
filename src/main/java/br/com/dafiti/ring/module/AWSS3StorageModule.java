@@ -343,9 +343,10 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
         String date = DateFormatText.split(splitBy)[0];
         String[] dateParts = date.split("-");
         String path = "";
-        
-        for(String part : dateParts) {
-            path += "/" + part;
+        String [] parts = {"year", "month", "day"};
+        for(int i = 0; i < dateParts.length; i++) {
+            String part = dateParts[i];
+            path += "/" + parts[i] + "=" + part;
         }
         
         return path + "/";
