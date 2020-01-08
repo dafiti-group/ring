@@ -100,7 +100,7 @@ public class FileHandlerService extends JSONDocument {
                      ImportLogStatus.ERROR,
                      Boolean.TRUE,
                      "ERROR:" + ex.toString());
-            Logger.getLogger(FileHandlerService.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(FileHandlerService.class.getName()).log(Level.ALL, null, ex);
         }
         return new FileHandler();
     }

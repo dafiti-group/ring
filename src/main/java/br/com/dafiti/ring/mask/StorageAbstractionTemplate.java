@@ -35,7 +35,7 @@ import java.io.IOException;
  */
 public abstract class StorageAbstractionTemplate {
 
-    public String tmpFilePath = System.getProperty("user.home") + "/tmp_file/";
+    public String tmpFilePath = System.getProperty("user.home") + "/tmp_files/ring/";
 
     public abstract void createOrUpdateManualInput(ManualInput manualInput, boolean recreate);
 

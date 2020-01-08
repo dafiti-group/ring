@@ -21,6 +21,12 @@ Using [Maven](https://maven.apache.org/):
 
 ##### CONFIGURATION
 
+- Create the temporary directory where system will use to handle the files
+
+```shell
+mkdir -p ~/tmp_files/ring/
+```
+
 - Create the file ~/.ring/ring.properties with the following content
 
 ```properties

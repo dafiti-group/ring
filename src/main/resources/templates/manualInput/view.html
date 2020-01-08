@@ -52,7 +52,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="log : ${logList}" th:attr="data-href='/log/import/' + ${log.id}" class="clickable-row" >
+                            <tr th:each="log : ${logList}" th:attr="data-href=@{'/log/import/' + ${log.id}}" class="clickable-row" >
                                 <td>
                                     <span th:if="${log.status.toString().equals('RUNNING')}" class="glyphicon glyphicon-refresh blue-link link-btn-ico-sm" title="RUNNING" ></span>
                                     <span th:if="${log.status.toString().equals('ERROR')}" class="glyphicon glyphicon-remove-sign red-link link-btn-ico-sm" title="ERROR" ></span>
@@ -83,7 +83,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="log : ${logList}" th:attr="data-href='/log/import/' + ${log.id}" class="clickable-row" >
+                            <tr th:each="log : ${logList}" th:attr="data-href=@{'/log/import/' + ${log.id}}" class="clickable-row" >
                                 <td>
                                     <span th:if="${log.status.toString().equals('RUNNING')}" class="glyphicon glyphicon-refresh blue-link link-btn-ico-sm" title="RUNNING" ></span>
                                     <span th:if="${log.status.toString().equals('ERROR')}" class="glyphicon glyphicon-remove-sign red-link link-btn-ico-sm" title="ERROR" ></span>

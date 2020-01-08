@@ -122,7 +122,7 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
                 gzipOutputStream.close();
                 outputStream.close();
             } catch (IOException ex) {
-                Logger.getLogger(AWSS3StorageModule.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(AWSS3StorageModule.class.getName()).log(Level.ALL, null, ex);
             }
         }
 

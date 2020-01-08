@@ -31,8 +31,13 @@ import br.com.dafiti.ring.repository.ManualInputRepository;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -125,7 +130,7 @@ public class ManualInputService {
      * @param inputStream
      * @param log
      */
-    @Async
+    @Async("ringTaskExecutor")
     public void process(ManualInput manualInput, InputStream inputStream, ImportLog log) {
 
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -147,11 +152,13 @@ public class ManualInputService {
                      true,
                      "PROCESS ENDED!");
         } catch (Exception e) {
-            e.printStackTrace();
+             Logger.getLogger(ManualInputService.class.getName()).log(Level.ALL, "Fail processing file!", e);
             importLogService.updateLogText(log,
                      ImportLogStatus.ERROR,
                      true,
-                     "ERROR:" + e.toString() + "\nPROCESS ENDED!");
+                     "ERROR:" + e.toString() + "\n"
+                             + Arrays.asList(e.getStackTrace()).stream().map(m -> m.getClassName() + " -> method: "  + m.getMethodName() + " -> line number: " + m.getLineNumber() + "\n").collect(Collectors.toList()).toString()
+                             + "\nPROCESS ENDED!");
         }
 
     }
