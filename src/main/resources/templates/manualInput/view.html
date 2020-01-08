@@ -19,9 +19,14 @@
                             <span class="glyphicon glyphicon-plus"></span>
                         </a>
                     </th>
-                    
                 </tr>
             </table>
+            
+            <div th:if="${ errorMessage != null }" class="form-group">
+                <div class="alert alert-danger" role="alert">
+                    <span th:text="${errorMessage}"></span>
+                </div>  
+            </div>
 
             <div role="group">
                 <a class="glyphicon glyphicon-time pull-right link-btn-ico-sm-2 black-link icon-space" th:if="${showLog == null}" role="button" data-toggle="collapse" data-target="#collapseLogHistory" aria-expanded="false" aria-controls="collapseLogHistory" title="Log History"></a>

@@ -171,15 +171,15 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
             http.antMatcher("/**/**/**/**")
                     .authorizeRequests()
                     .antMatchers(
-                            "/**/create",
-                            "/**/edit/**",
-                            "/**/save/**",
-                            "/**/delete/**").access("hasRole('LORD')")
-                    .antMatchers(
                             "/manual/input/create",
                             "/manual/input/delete/**",
                             "/manual/input/save/**",
                             "/manual/input/edit/**").access("hasRole('ADMIN') || hasRole('LORD')")
+                    .antMatchers(
+                            "/**/create",
+                            "/**/edit/**",
+                            "/**/save/**",
+                            "/**/delete/**").access("hasRole('LORD')")
                     .antMatchers(
                             "/**/**/view/**",
                             "/**/**/list/**",

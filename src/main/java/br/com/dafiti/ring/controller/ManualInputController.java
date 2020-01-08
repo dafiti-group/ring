@@ -29,6 +29,7 @@ import br.com.dafiti.ring.model.DivisionGroup;
 import br.com.dafiti.ring.model.Metadata;
 import br.com.dafiti.ring.model.User;
 import br.com.dafiti.ring.option.ImportLogStatus;
+import br.com.dafiti.ring.service.DivisionGroupService;
 import br.com.dafiti.ring.service.ImportLogService;
 import br.com.dafiti.ring.service.ManualInputService;
 import br.com.dafiti.ring.service.MetadataService;
@@ -38,7 +39,10 @@ import br.com.dafiti.ring.service.UserService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +73,7 @@ public class ManualInputController {
     private final ImportLogService importLogService;
     private final UserService userService;
     private final RoleService roleService;
+    private final DivisionGroupService groupService;
 
     @Autowired
     public ManualInputController(MetadataService metadataService,
@@ -76,13 +81,15 @@ public class ManualInputController {
             StorageManagerService storageManagerService,
             ImportLogService importLogService,
             UserService userService,
-            RoleService roleService) {
+            RoleService roleService,
+            DivisionGroupService groupService) {
         this.metadataService = metadataService;
         this.manualInputService = manualInputService;
         this.storageManagerService = storageManagerService;
         this.importLogService = importLogService;
         this.userService = userService;
         this.roleService = roleService;
+        this.groupService = groupService;
     }
 
     /**
@@ -95,7 +102,11 @@ public class ManualInputController {
     @GetMapping(path = "/create")
     public String newManualInput(Model model, Principal principal) {
 
-        DivisionGroup divisionGroup = userService.findByUsername(principal.getName()).getDivisionGroup();
+        User user = userService.findByUsername(principal.getName());
+        DivisionGroup divisionGroup = user.getDivisionGroup();
+        if(user.getRoles().contains(roleService.findByName("LORD"))) {
+            model.addAttribute("groups", groupService.findAll());
+        }
 
         model.addAttribute("manualInput", new ManualInput(divisionGroup));
         return "manualInput/edit";
@@ -183,6 +194,12 @@ public class ManualInputController {
     public String save(Model model,
             @ModelAttribute ManualInput manualInput) {
 
+        if(manualInput.getDivisionGroups() == null) {
+            manualInput.setDivisionGroups(new HashSet<DivisionGroup>());
+            manualInput.getDivisionGroups().add(manualInput.getOriginDivisionGroup());
+        }
+        
+        
         List<Metadata> metadata = manualInput.getMetadata();
         ManualInput lastPersist = manualInput.getId() == null ? null : manualInputService.findById(manualInput.getId());
 
@@ -221,11 +238,8 @@ public class ManualInputController {
             Principal principal,
             @RequestParam(value = "log_expanded", required = false) boolean is_log_expanded,
             @PathVariable(value = "id") ManualInput manualInput) {
+        
 
-        User user = userService.findByUsername(principal.getName());
-        if (!manualInput.getDivisionGroups().contains(user.getDivisionGroup())) {
-            return "/403";
-        }
 
         if (is_log_expanded) {
             model.addAttribute("showLog", true);
@@ -255,13 +269,8 @@ public class ManualInputController {
             @PathVariable(value = "id") ManualInput manualInput) {
         
         if(!hasPermission(principal, manualInput)) {
-            redirectAttributes.addAttribute("error", "Sorry! You don't have permission to edit a Manul Input out of your group!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to edit a Manul Input out of your group!");
             return "redirect:/manual/input/view/" + manualInput.getId();
-        }
-
-        User user = userService.findByUsername(principal.getName());
-        if (!manualInput.getDivisionGroups().contains(user.getDivisionGroup())) {
-            return "/403";
         }
 
         model.addAttribute("manualInput", manualInput);
@@ -283,13 +292,13 @@ public class ManualInputController {
             @PathVariable("id") ManualInput manualInput) {
         
         if(!hasPermission(principal, manualInput)) {
-            redirectAttributes.addAttribute("error", "Sorry! You don't have permission to delete a Manul Input out of your group!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to delete a Manul Input out of your group!");
             return "redirect:/manual/input/view/" + manualInput.getId();
         }
         
         storageManagerService.deleteManualInput(manualInput);
         manualInputService.delete(manualInput);
-        redirectAttributes.addAttribute("success", "Manual Input was deleted!");
+        redirectAttributes.addFlashAttribute("success", "Manual Input was deleted!");
         return "redirect:/manual/input/list";
     }
 
@@ -336,7 +345,7 @@ public class ManualInputController {
             Model model) {
         
         if(!hasPermission(principal, manualInput)) {
-            redirectAttributes.addAttribute("error", "Sorry! You don't have permission to upload a file here!");
+            redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to upload a file here!");
             return "redirect:/manual/input/view/" + manualInput.getId();
         }
 
