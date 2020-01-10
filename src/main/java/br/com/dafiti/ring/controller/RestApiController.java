@@ -31,6 +31,7 @@ import br.com.dafiti.ring.service.ManualInputService;
 import br.com.dafiti.ring.service.StorageManagerService;
 import br.com.dafiti.ring.service.TokenService;
 import br.com.dafiti.ring.service.UserService;
+import io.swagger.annotations.ApiOperation;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -85,6 +86,7 @@ public class RestApiController {
      * @param apiAuth
      * @return
      */
+    @ApiOperation(value = "Authenticate user. Return a token if user is valid.")
     @RequestMapping(value = "/auth", method = RequestMethod.POST
             , consumes = MediaType.APPLICATION_JSON_VALUE
             , produces = MediaType.APPLICATION_JSON_VALUE)
@@ -120,6 +122,7 @@ public class RestApiController {
      * @param filter
      * @return
      */
+    @ApiOperation(value = "Return the CSV file of a manual input respecting the filters.")
     @GetMapping(path = "/get")
     public ResponseEntity DowloadFile(ApiFilterDTO filter) {
 

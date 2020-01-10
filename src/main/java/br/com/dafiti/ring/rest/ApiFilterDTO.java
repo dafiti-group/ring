@@ -33,10 +33,14 @@ import java.util.regex.Pattern;
  * @author guilherme.almeida
  */
 public class ApiFilterDTO {
-    
+
     private String manualInput;
     private String operator;
     private String loadDate;
+    private String delimiter;
+    private String quote;
+    private String escape;
+    private String lineSeparator;
 
     public String getManualInput() {
         return manualInput;
@@ -61,41 +65,86 @@ public class ApiFilterDTO {
     public void setLoadDate(String loadDate) {
         this.loadDate = loadDate;
     }
-    
+
+    public Character getDelimiter() {
+        return delimiter.toCharArray()[0];
+    }
+
+    public void setDelimiter(String delimiter) {
+        this.delimiter = delimiter;
+    }
+
+    public Character getQuote() {
+        return quote.toCharArray()[0];
+    }
+
+    public void setQuote(String quote) {
+        this.quote = quote;
+    }
+
+    public Character getEscape() {
+        return escape.toCharArray()[0];
+    }
+
+    public void setEscape(String escape) {
+        this.escape = escape;
+    }
+
+    public String getLineSeparator() {
+        return lineSeparator;
+    }
+
+    public void setLineSeparator(String lineSeparator) {
+        this.lineSeparator = lineSeparator;
+    }
+
     public boolean ok() {
-        
-        if(this.manualInput == null || this.manualInput.isEmpty()) {
+
+        if (this.manualInput == null || this.manualInput.isEmpty()) {
             return false;
         }
-        
+
         List<String> operators = Arrays.asList("$eq", "$ne", "$lt", "$lte", "$gt", "$gte");
-        
-        if(this.operator == null || this.operator.isEmpty()) {
+
+        if (this.operator == null || this.operator.isEmpty()) {
             this.operator = "gte";
         }
-        
-        if(!operators.contains("$" + this.operator)) {
+
+        if (!operators.contains("$" + this.operator)) {
+            return false;
+        }
+
+        if (this.loadDate == null || this.loadDate.isEmpty()) {
+            this.loadDate = "2000-01-01 00:00:00";
+        }
+
+        String regex = "^[0-9]{4}-[0-9]{2}-[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2}$";
+
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(loadDate);
+
+        if (!matcher.find()) {
             return false;
         }
         
-        if(this.loadDate == null || this.loadDate.isEmpty()) {
-            this.loadDate = "2000-01-01 00:00:00";
+        if(this.delimiter == null) {
+            this.delimiter = ";";
         }
-        
-        String regex  = "^[0-9]{4}-[0-9]{2}-[0-9]{1,2} [0-9]{2}:[0-9]{2}:[0-9]{2}$";
-        
-        Pattern pattern = Pattern.compile(regex);
-                Matcher matcher = pattern.matcher(loadDate);
+        if(this.quote == null) {
+            this.quote = "\"";
+        }
+        if(this.escape == null) {
+            this.escape = "\\";
+        }
+        if(this.lineSeparator == null) {
+            this.lineSeparator = "\n";
+        }
 
-                if (!matcher.find()) {
-                    return false;
-                }
-        
         return true;
     }
-    
+
     public String getFilter() {
         return "'{ \"load_date\": { \"$" + operator + "\" :\"" + loadDate + "\"}}'";
     }
-   
+
 }

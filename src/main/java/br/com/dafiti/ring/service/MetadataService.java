@@ -55,7 +55,7 @@ public class MetadataService {
      * @return
      */
     public boolean validate(List<Metadata> metadatas) {
-
+        
         // get active field names that appears twice
         List<String> activeFieldsDuplicated = metadatas.stream()
                 .filter(f -> f.getIsActive())
@@ -152,7 +152,7 @@ public class MetadataService {
      * @return
      */
     public String evaluateValidationMessagem(List<Metadata> metadatas) {
-
+        
         List<String> activeFieldsDuplicated = metadatas.stream()
                 .filter(f -> f.getIsActive())
                 .collect(Collectors.groupingBy(g -> g.getFieldName(), Collectors.counting()))

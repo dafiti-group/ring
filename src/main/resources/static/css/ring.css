@@ -32,6 +32,10 @@ label {
     font-size: 13px;
 }
 
+.checkbox-label {
+    font-weight: normal;
+}
+
 .label-edit-information{
     color: #999999;
     font-size: 12px;

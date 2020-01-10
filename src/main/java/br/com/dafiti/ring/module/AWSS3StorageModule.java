@@ -252,11 +252,17 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
             JsonNode jsonTree = new ObjectMapper().readTree(fileToDel);
 
             Builder csvSchemaBuilder = CsvSchema.builder();
+            
+            csvSchemaBuilder.setColumnSeparator(filter.getDelimiter());
+            csvSchemaBuilder.setQuoteChar(filter.getQuote());
+            csvSchemaBuilder.setEscapeChar(filter.getEscape());
+            csvSchemaBuilder.setLineSeparator(filter.getLineSeparator());
+            
             for (Metadata metadata : manualInput.getMetadata()) {
                 csvSchemaBuilder.addColumn(metadata.getFieldName());
             }
             csvSchemaBuilder.addColumn("business_key");
-            csvSchemaBuilder.addColumn("partition_field");
+            csvSchemaBuilder.addColumn("delta_partition");
             csvSchemaBuilder.addColumn("load_date");
             CsvSchema csvSchema = csvSchemaBuilder.build().withHeader();
 

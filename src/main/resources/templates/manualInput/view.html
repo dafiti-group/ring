@@ -112,6 +112,38 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="row" >
+                    <div class="col-lg-12">
+                        <label>Group:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12" >
+                                <input type="text" th:field="*{originDivisionGroup.name}" class="form-control" disabled="true" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="form-check">
+                            <input type="checkbox" id="alterable" name="alterable" th:field="*{alterable}" th:checked="*{alterable}" disabled="true" />
+                            <label class="checkbox-label" for="rebuild">Can be modified (add field, change data type or recreate)</label>
+                        </div>
+                    </div>
+                </div>
+                <br/>
+                
+                <div class="row">
+                    <div class="col-lg-12">
+                        <label>Description:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12" >
+                                <textarea class="form-control" th:field="*{description}" disabled="true" rows="3" ></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row">
                     <div class="col-lg-3">

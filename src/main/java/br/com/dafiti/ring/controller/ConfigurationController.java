@@ -43,7 +43,7 @@ import br.com.dafiti.ring.service.ConfigurationService;
  * @author Helio Leal
  */
 @Controller
-@RequestMapping(path = "/configuration")
+@RequestMapping(path = "/settings")
 public class ConfigurationController {
 
     private final ConfigurationService configurationService;

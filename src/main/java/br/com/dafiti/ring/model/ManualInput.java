@@ -66,6 +66,8 @@ public class ManualInput extends Tracker implements Serializable {
     private List<Metadata> metadata;
     private Set<DivisionGroup> divisionGroups;
     private DivisionGroup originDivisionGroup;
+    private boolean alterable;
+    private String description;
     
     public ManualInput() {
         
@@ -77,6 +79,7 @@ public class ManualInput extends Tracker implements Serializable {
         this.escapeChar = '\\';
         this.lineSeparator = "\\n";
         this.sheetName = "Plan1";
+        this.alterable = true;
         
         List<Metadata> metadataList = new ArrayList<>();
         metadataList.add(new Metadata(1));
@@ -152,6 +155,23 @@ public class ManualInput extends Tracker implements Serializable {
 
     public void setSheetName(String sheetName) {
         this.sheetName = sheetName;
+    }
+    
+    public boolean getAlterable() {
+        return this.alterable;
+    }
+    
+    public void setAlterable(boolean alterable) {
+        this.alterable = alterable;
+    }
+    
+    @Column(columnDefinition = "text")
+    public String getDescription() {
+        return this.description;
+    }
+    
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @OneToMany(mappedBy = "manualInput", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)

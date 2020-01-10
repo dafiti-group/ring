@@ -85,7 +85,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
     @Order(1)
     public class ApiWebSecurityConfigurationAdapter extends WebSecurityConfigurerAdapter {
 
-        @Override
+        /*@Override
         public void configure(WebSecurity web) throws Exception {
             web
                     .ignoring()
@@ -96,7 +96,7 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                             "/js/**",
                             "/images/**",
                             "/customization/**");
-        }
+        }*/
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {
@@ -134,7 +134,11 @@ public class SpringSecurityConfig extends WebSecurityConfigurerAdapter {
                             "/css/**",
                             "/js/**",
                             "/images/**",
-                            "/customization/**");
+                            "/customization/**",
+                            "/**.html",
+                            "/v2/api-docs",
+                            "/configuration/**",
+                            "/swagger-resources/**");
         }
 
         @Override

@@ -306,7 +306,7 @@ public class MongodbServiceBkp {
 
         // creates an array with the number of columns in metadata adding 3 more indexs
         // the 3 aditional fields refers to the default columns to generate tables and collections for manual input
-        // partition_field, business_ley and load_date
+        // delta_partition, business_ley and load_date
         String[] jsonLine = new String[metadataList.size() + 3];
 
         for (int line = 0; line < file.getData().size(); line++) {
@@ -353,8 +353,8 @@ public class MongodbServiceBkp {
                 }
             }
 
-            // add 3 default fields: partition_field, business_ley and load_date
-            jsonLine[metadataList.size()] = "\"partition_field\":\"FULL\"";
+            // add 3 default fields: delta_partition, business_ley and load_date
+            jsonLine[metadataList.size()] = "\"delta_partition\":\"FULL\"";
             // define business key with hash
             if(businessKey.isEmpty()) {
                 businessKey = line + load_date;

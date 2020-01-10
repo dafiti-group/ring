@@ -23,7 +23,9 @@
  */
 package br.com.dafiti.ring;
 
+import br.com.dafiti.ring.model.User;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -43,6 +45,14 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import springfox.documentation.builders.ApiInfoBuilder;
+import springfox.documentation.builders.ParameterBuilder;
+import springfox.documentation.builders.PathSelectors;
+import springfox.documentation.builders.RequestHandlerSelectors;
+import springfox.documentation.schema.ModelRef;
+import springfox.documentation.spi.DocumentationType;
+import springfox.documentation.spring.web.plugins.Docket;
+import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 /**
  *
@@ -51,13 +61,14 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 @SpringBootApplication
 @EnableCaching
 @EnableAsync
+@EnableSwagger2
 @Configuration
 @PropertySources({
     @PropertySource("classpath:application.properties"),
     @PropertySource(value = "file:${user.home}/.ring/ring.properties", ignoreResourceNotFound = true)
 })
 public class Application/* extends SpringBootServletInitializer*/ {
-    
+
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
@@ -74,7 +85,7 @@ public class Application/* extends SpringBootServletInitializer*/ {
                 .initialCapacity(500)
                 .maximumSize(1000)
                 .expireAfterAccess(30, TimeUnit.MINUTES));
-        
+
         return caffeineCacheManager;
     }
 
@@ -104,20 +115,43 @@ public class Application/* extends SpringBootServletInitializer*/ {
         executor.initialize();
         return executor;
     }
-    
+
     /*@Bean
     public AuthenticationSuccessHandler loginSuccessHandler() {
         return new LoginSuccessHandler();
     }*/
-    
     @Bean
     public SessionRegistry sessionRegistry() {
         return new SessionRegistryImpl();
     }
-    
+
     @Bean
     public ServletListenerRegistrationBean<HttpSessionEventPublisher> httpSessionEventPublisher() {
         return new ServletListenerRegistrationBean<>(new HttpSessionEventPublisher());
     }
-    
+
+    @Bean
+    public Docket APIForum() {
+        return new Docket(DocumentationType.SWAGGER_2)
+                .select()
+                .apis(RequestHandlerSelectors.basePackage("br.com.dafiti.ring.controller"))
+                .paths(PathSelectors.ant("/api/**"))
+                .build()
+                .ignoredParameterTypes(User.class)
+                .apiInfo(new ApiInfoBuilder()
+                .title("Ring API Documentation")
+                .license("License MIT")
+                .licenseUrl("https://opensource.org/licenses/MIT")
+                .build())
+                .globalOperationParameters(Arrays.asList(
+                        new ParameterBuilder()
+                                .name("Authorization")
+                                .description("Header for token JWT")
+                                .modelRef(new ModelRef("string"))
+                                .parameterType("header")
+                                .required(false)
+                                .build()
+                ));
+    }
+
 }

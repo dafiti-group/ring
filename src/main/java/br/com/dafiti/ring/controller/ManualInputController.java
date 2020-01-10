@@ -39,10 +39,8 @@ import br.com.dafiti.ring.service.UserService;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,11 +102,11 @@ public class ManualInputController {
 
         User user = userService.findByUsername(principal.getName());
         DivisionGroup divisionGroup = user.getDivisionGroup();
-        if(user.getRoles().contains(roleService.findByName("LORD"))) {
-            model.addAttribute("groups", groupService.findAll());
-        }
+        ManualInput manualInput = new ManualInput(divisionGroup);
 
-        model.addAttribute("manualInput", new ManualInput(divisionGroup));
+        listGroupsIfPermited(model, principal, null);
+
+        model.addAttribute("manualInput", manualInput);
         return "manualInput/edit";
     }
 
@@ -118,14 +116,26 @@ public class ManualInputController {
      * we can keep fault tolerance when modifying a manualInput metadata
      *
      * @param model
+     * @param principal
      * @param manualInput
      * @param index
      * @return
      */
     @PostMapping(path = "/save", params = {"remove_field_from_metadata"})
     public String removeFieldFromMetadata(Model model,
+            Principal principal,
             @ModelAttribute ManualInput manualInput,
             @RequestParam(value = "remove_field_from_metadata") int index) {
+
+        ManualInput persisted = manualInput.getId() == null ? null : manualInputService.findById(manualInput.getId());
+
+        listGroupsIfPermited(model, principal, manualInput.getId());
+
+        if (persisted != null && !persisted.getAlterable()) {
+            model.addAttribute("errorMessage", "You can not remove a field, alter it's data type or recreate!");
+            model.addAttribute("manualInput", manualInput);
+            return "manualInput/edit";
+        }
 
         manualInput.getMetadata().get(index).setIsActive(Boolean.FALSE);
         model.addAttribute("manualInput", manualInput);
@@ -138,15 +148,18 @@ public class ManualInputController {
      * target and add to metadata list of a manualInput
      *
      * @param model
+     * @param principal
      * @param manualInput
      * @return
      */
     @PostMapping(path = "/save", params = {"add_field_to_metadata"})
     public String addFieldToMetadata(Model model,
+            Principal principal,
             @ModelAttribute ManualInput manualInput) {
 
         Integer nexPosition = manualInput.getMetadata().stream().mapToInt(m -> m.getOrdinalPosition()).max().getAsInt() + 1;
         manualInput.getMetadata().add(new Metadata(nexPosition));
+        listGroupsIfPermited(model, principal, manualInput.getId());
         model.addAttribute("manualInput", manualInput);
 
         return "manualInput/edit";
@@ -157,12 +170,28 @@ public class ManualInputController {
      * in mongoDB and table in MySql if exists
      *
      * @param model
+     * @param principal
      * @param manualInput
      * @return
      */
     @PostMapping(path = "/save", params = {"recreate_manual_input"})
     public String recreteAndSave(Model model,
+            Principal principal,
             @ModelAttribute ManualInput manualInput) {
+
+        if (manualInput.getId() == null) {
+            model.addAttribute("errorMessage", "You can not recreate a non existing manual input!");
+            return "manualInput/edit";
+        }
+        ManualInput persisted = manualInputService.findById(manualInput.getId());
+
+        listGroupsIfPermited(model, principal, manualInput.getId());
+
+        if (!persisted.getAlterable()) {
+            model.addAttribute("errorMessage", "You can not remove a field, alter it's data type or recreate!");
+            model.addAttribute("manualInput", manualInput);
+            return "manualInput/edit";
+        }
 
         List<Metadata> metadata = manualInput.getMetadata();
         metadataService.refreshMetadata(metadata);
@@ -184,34 +213,44 @@ public class ManualInputController {
 
     /**
      * saves the manual input configurations and create the related collection
-     * in mongoDB and table in MySql
+     * in defined storage in storageManager
      *
      * @param model
+     * @param principal
      * @param manualInput
      * @return
      */
     @PostMapping(path = "/save")
     public String save(Model model,
+            Principal principal,
             @ModelAttribute ManualInput manualInput) {
 
-        if(manualInput.getDivisionGroups() == null) {
+        if (manualInput.getDivisionGroups() == null) {
             manualInput.setDivisionGroups(new HashSet<DivisionGroup>());
             manualInput.getDivisionGroups().add(manualInput.getOriginDivisionGroup());
         }
-        
-        
+
         List<Metadata> metadata = manualInput.getMetadata();
-        ManualInput lastPersist = manualInput.getId() == null ? null : manualInputService.findById(manualInput.getId());
+        ManualInput persisted = manualInput.getId() == null ? null : manualInputService.findById(manualInput.getId());
 
         model.addAttribute("manualInput", manualInput);
+        Boolean isRecreate = persisted == null ? true : metadataService.hasDataTypeChange(metadata, persisted.getMetadata());
+        Boolean isAlterable = persisted == null ? true : persisted.getAlterable();
         Boolean isMetadataValidated = metadataService.validate(metadata);
-        Boolean isRecreate = lastPersist == null ? true : metadataService.hasDataTypeChange(metadata, lastPersist.getMetadata());
+
+        listGroupsIfPermited(model, principal, manualInput.getId());
+
+        if (!isAlterable && isRecreate) {
+            model.addAttribute("errorMessage", "You can not remove a field, alter it's data type or recreate!");
+            model.addAttribute("manualInput", manualInput);
+            return "manualInput/edit";
+        }
 
         if (!isMetadataValidated) {
             String errorMessage = metadataService.evaluateValidationMessagem(metadata);
             model.addAttribute("errorMessage", errorMessage);
             return "manualInput/edit";
-        } else if (lastPersist != null && !manualInput.getName().equals(lastPersist.getName())) {
+        } else if (persisted != null && !manualInput.getName().equals(persisted.getName())) {
             model.addAttribute("errorMessage", "You can not change manual input name! :(");
             return "manualInput/edit";
         }
@@ -238,13 +277,11 @@ public class ManualInputController {
             Principal principal,
             @RequestParam(value = "log_expanded", required = false) boolean is_log_expanded,
             @PathVariable(value = "id") ManualInput manualInput) {
-        
-
 
         if (is_log_expanded) {
             model.addAttribute("showLog", true);
         }
-        
+
         Pageable firstPageWithSixElemets = PageRequest.of(0, 6);
         List<ImportLog> importLogList = importLogService.findByManualInputOrderByCreatedAtDesc(manualInput, firstPageWithSixElemets);
         model.addAttribute("logList", importLogList);
@@ -267,8 +304,8 @@ public class ManualInputController {
             Principal principal,
             RedirectAttributes redirectAttributes,
             @PathVariable(value = "id") ManualInput manualInput) {
-        
-        if(!hasPermission(principal, manualInput)) {
+
+        if (!hasPermission(principal, manualInput)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to edit a Manul Input out of your group!");
             return "redirect:/manual/input/view/" + manualInput.getId();
         }
@@ -276,7 +313,7 @@ public class ManualInputController {
         model.addAttribute("manualInput", manualInput);
         return "manualInput/edit";
     }
-    
+
     /**
      *
      * @param model
@@ -290,12 +327,12 @@ public class ManualInputController {
             Principal principal,
             RedirectAttributes redirectAttributes,
             @PathVariable("id") ManualInput manualInput) {
-        
-        if(!hasPermission(principal, manualInput)) {
+
+        if (!hasPermission(principal, manualInput)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to delete a Manul Input out of your group!");
             return "redirect:/manual/input/view/" + manualInput.getId();
         }
-        
+
         storageManagerService.deleteManualInput(manualInput);
         manualInputService.delete(manualInput);
         redirectAttributes.addFlashAttribute("success", "Manual Input was deleted!");
@@ -312,7 +349,7 @@ public class ManualInputController {
      */
     @GetMapping(path = "/list")
     public String list(Model model, Principal principal) {
-        
+
         model.addAttribute("manualInputList", manualInputService.findAll());
 
         /*User user = userService.findByUsername(principal.getName());
@@ -323,7 +360,6 @@ public class ManualInputController {
             DivisionGroup divisionGroup = userService.findByUsername(principal.getName()).getDivisionGroup();
             model.addAttribute("manualInputList", divisionGroup.getManualInput());
         }*/
-
         return "manualInput/list";
     }
 
@@ -343,8 +379,8 @@ public class ManualInputController {
             RedirectAttributes redirectAttributes,
             Principal principal,
             Model model) {
-        
-        if(!hasPermission(principal, manualInput)) {
+
+        if (!hasPermission(principal, manualInput)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to upload a file here!");
             return "redirect:/manual/input/view/" + manualInput.getId();
         }
@@ -377,7 +413,7 @@ public class ManualInputController {
 
         return "redirect:/manual/input/view/" + manualInput.getId() + "?log_expanded=true";
     }
-    
+
     /**
      *
      * @param principal
@@ -394,5 +430,15 @@ public class ManualInputController {
         }
 
         return false;
+    }
+
+    private void listGroupsIfPermited(Model model, Principal principal, Long manualInputId) {
+
+        if (manualInputId == null) {
+            User user = userService.findByUsername(principal.getName());
+            if (user.getRoles().contains(roleService.findByName("LORD"))) {
+                model.addAttribute("groups", groupService.findAll());
+            }
+        }
     }
 }
