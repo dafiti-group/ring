@@ -81,6 +81,9 @@ Shows a quicky text about how to use the system
 ##### CREATE MANUAL INPUT
 - Click in the button Create Manual Input, represented with **+** icon.
 - Define the manual input name in the field ***Manual Input Name***, the field should match the pattern **[0-9a-z_]***.
+- Define the group of manual input in the field ***Group*** if you have role LORD, or else the group is setted to the same group of logged user.
+- Define the checkbox ***Can be modified*** (Default: checked). If this option is not checked, nobody can make modification in metadata, only an user with role LORD can check again
+- Define a description in the field ***Description***. This field is very important to understand it's purpose.
 - The fields ***Delimiter***, ***Quote***, ***Escape*** and ***Line Separator*** have a default value and you change change as you wish.
 - Define the the name of each column in metadata for your manual input in the field ***Field Name***. It defines what header is expected coming file to upload. It's not allowed 2 fields with the same name.
 - Define the the data type of each column in metadata for your manual input in the field ***Data Type***.
