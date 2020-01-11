@@ -65,6 +65,10 @@ Using [Apache Tomcat](http://tomcat.apache.org/):
 
 - Copy the file ring.war to webapps directory of Apache Tomcat.
 
+##### APPLIATION START
+
+- When application runs for the first time, Ring generate an admin user with username: ***ring.manager*** and passowrd: ***rmanager***. You can change it's password later
+- After your first login go to Configuration section to configure your e-mail service. It's required to create new users and reset users password.
 
 # User Manual
 this section explain the main funcionalities of Ring
@@ -195,8 +199,27 @@ Allows the user to alter his own password.
 - Click in the button ***Upload Logo*** to alter the logo of the system with any image file.
 
 
+## API Rest
+
+- In the side menu, access the option ***API Rest***
+
+In this section you can access the API documentation.
+Configure the call to API with header `Content-Type: applcation/json`
+Get your user token by calling `/api/auth` sending in the body a JSON with your username and passowrd (your user may have role ADMIN or LORD)
+
+```json
+{
+    "username":"your.username",
+    "password":"your.pass"
+}
+```
+
+Then you will receive a token to send in header for next API calls. User the header `Authorization: Bearer ${TOKEN}`.
+Here is simple examples of URL calls, you can see more details about each URL call in the sction API Rest of application.
 
 ```shell
-POST /api/auth
-`GET`
+`POST /api/auth` Authenticate user. Return a token if user is valid.
+`GET  /api/get?manualInput=<manual input name>`  Return the CSV file of a manual input respecting the filters.
+`GET  /api/load?manualInput=<manual input name>` (not available yet) You can yupload a file remotely to your manual input.
+`GET  /api/gsheets/extract?manualInput=<manual input name>` (not available yet) allows you to start remotely extact data from Google Sheets to Ring application.
 ```
