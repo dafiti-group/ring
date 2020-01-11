@@ -194,3 +194,11 @@ Allows the user to alter his own password.
 - In the field ***Log Retention*** is possible to define in days a clean up of the *logs of import files*
 - Click in the button ***Upload Logo*** to alter the logo of the system with any image file.
 
+
+
+```API Blueprint
+testeing api Blueprint
+post
+get hhtp://localhost:8080/testeing
+put
+```
