@@ -67,7 +67,10 @@ Using [Apache Tomcat](http://tomcat.apache.org/):
 
 ##### APPLIATION START
 
-- When application runs for the first time, Ring generate an admin user with username: ***ring.manager*** and passowrd: ***rmanager***. You can change it's password later
+- When application runs for the first time, Ring generate an admin user with
+    - username: ***ring.manager***
+    - passowrd: ***rmanager***
+> You can change it's password later
 - After your first login go to Configuration section to configure your e-mail service. It's required to create new users and reset users password.
 
 # User Manual
