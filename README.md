@@ -197,6 +197,6 @@ Allows the user to alter his own password.
 
 
 ```shell
-`POST` `/api/auth`
+POST /api/auth
 `GET`
 ```
