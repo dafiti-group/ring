@@ -196,9 +196,7 @@ Allows the user to alter his own password.
 
 
 
-```API Blueprint
-testeing api Blueprint
-post
-get hhtp://localhost:8080/testeing
-put
+```shell
+`POST` `/api/auth`
+`GET`
 ```
