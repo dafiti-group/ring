@@ -63,6 +63,8 @@ public class ManualInput extends Tracker implements Serializable {
     private Character escapeChar;
     private String lineSeparator;
     private String sheetName;
+    private String spreadsheetKey;
+    private String spreadsheetRange;
     private List<Metadata> metadata;
     private Set<DivisionGroup> divisionGroups;
     private DivisionGroup originDivisionGroup;
@@ -73,20 +75,22 @@ public class ManualInput extends Tracker implements Serializable {
         
     }
 
-    public ManualInput(DivisionGroup divisionGroup) {
+    public ManualInput(DivisionGroup divisionGroup, FileType fileType) {
         this.delimiterChar = ';';
         this.quoteChar = '"';
         this.escapeChar = '\\';
         this.lineSeparator = "\\n";
-        this.sheetName = "Plan1";
+        this.sheetName = "Sheet1";
         this.alterable = true;
         
         List<Metadata> metadataList = new ArrayList<>();
         metadataList.add(new Metadata(1));
         metadataList.add(new Metadata(2));
         this.metadata = metadataList;
+        
         this.originDivisionGroup = divisionGroup;
         this.divisionGroups = new HashSet<>(Arrays.asList(divisionGroup));
+        this.fileType = fileType;
     }
 
     @Id
@@ -155,6 +159,22 @@ public class ManualInput extends Tracker implements Serializable {
 
     public void setSheetName(String sheetName) {
         this.sheetName = sheetName;
+    }
+    
+    public String getSpreadsheetKey() {
+        return spreadsheetKey;
+    }
+
+    public void setSpreadsheetKey(String spreadsheetKey) {
+        this.spreadsheetKey = spreadsheetKey;
+    }
+
+    public String getSpreadsheetRange() {
+        return spreadsheetRange;
+    }
+
+    public void setSpreadsheetRange(String spreadsheetRange) {
+        this.spreadsheetRange = spreadsheetRange;
     }
     
     public boolean getAlterable() {

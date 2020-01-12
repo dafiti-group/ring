@@ -4,24 +4,30 @@
         <title>Ring</title>
     </head>
     <body>
-        
+
         <th:block th:include="base/header :: navbar"></th:block>
 
         <div class="container-fluid main-content">
-            
+
             <table>
                 <tr>
                     <th>
                         <h2 class="page-title">Manual Input</h2>
                     </th>
                     <th class="btn-action">
-                        <a class="black-link" th:href="@{'/manual/input/create'}" title="Create Manual Input">
-                            <span class="glyphicon glyphicon-plus"></span>
-                        </a>
+                        <div class="btn-group">
+                            <a href="#" title="Create Manual Input" class="glyphicon glyphicon-plus dropdown-toggle link-btn-ico-size-12 black-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="black-link" th:href="@{'/manual/input/create?type=CSV'}">For CSV File</a></li>
+                                <li><a class="black-link" th:href="@{'/manual/input/create?type=XLSX'}">For XLSX File</a></li>
+                                <li><a class="black-link" th:href="@{'/manual/input/create?type=GSHEETS'}">For Google Sheets</a></li>
+                            </ul>
+                        </div>
                     </th>
                 </tr>
             </table>
-            
+
             <div th:if="${ errorMessage != null }" class="form-group">
                 <div class="alert alert-danger" role="alert">
                     <span th:text="${errorMessage}"></span>
@@ -112,9 +118,9 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="row" >
-                    <div class="col-lg-12">
+                    <div class="col-lg-9">
                         <label>Group:</label>
                         <div class="form-group">
                             <div class="col-sm-12" >
@@ -122,8 +128,17 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-lg-3">
+                        <label>File Type:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12" >
+                                <input type="text" th:field="*{fileType}" class="form-control" disabled="true" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                
+
                 <div class="row">
                     <div class="col-sm-12">
                         <div class="form-check">
@@ -133,7 +148,7 @@
                     </div>
                 </div>
                 <br/>
-                
+
                 <div class="row">
                     <div class="col-lg-12">
                         <label>Description:</label>
@@ -145,44 +160,79 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-lg-3">
-                        <label>Delimiter:</label>
-                        <div class="form-group">
-                            <div class="col-sm-12">
-                                <input type="text" class="form-control" th:field="*{delimiterChar}" disabled="true" maxlength="1" />
+                <!-- display this part if CSV is the file type -->
+                <div th:if="${manualInput.fileType.toString().equals('CSV')}" >
+                    <div class="row">
+                        <div class="col-lg-3">
+                            <label>Delimiter:</label>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <input type="text" class="form-control" th:field="*{delimiterChar}" disabled="true" maxlength="1" />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-3">
-                        <label>Quote:</label>
-                        <div class="form-group">
-                            <div class="col-sm-12">
-                                <input type="text" class="form-control" th:field="*{quoteChar}" disabled="true" maxlength="1"/>
+                        <div class="col-lg-3">
+                            <label>Quote:</label>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <input type="text" class="form-control" th:field="*{quoteChar}" disabled="true" maxlength="1"/>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-3">
-                        <label>Escape:</label>
-                        <div class="form-group">
-                            <div class="col-sm-12">
-                                <input type="text" class="form-control" th:field="*{escapeChar}" disabled="true" maxlength="1"/>
+                        <div class="col-lg-3">
+                            <label>Escape:</label>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <input type="text" class="form-control" th:field="*{escapeChar}" disabled="true" maxlength="1"/>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="col-lg-3">
-                        <label>Line Separator:</label>
-                        <div class="form-group">
-                            <div class="col-sm-12">
-                                <input type="text" class="form-control" th:field="*{lineSeparator}" disabled="true" maxlength="5" />
+                        <div class="col-lg-3">
+                            <label>Line Separator:</label>
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <input type="text" class="form-control" th:field="*{lineSeparator}" disabled="true" maxlength="5" />
+                                </div>
                             </div>
                         </div>
                     </div>
 
                 </div>
+
+                <!-- display this part if GSHEETS is the file type -->
+                <div th:if="${manualInput.fileType.toString().equals('GSHEETS')}" >
+
+                    <div class="col-lg-6">
+                        <label>SpreadSheet Key:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" th:field="*{spreadsheetKey}" disabled="true" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <label>Sheet Name:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" th:field="*{sheetName}" disabled="true" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3">
+                        <label>Range:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" th:field="*{spreadsheetRange}" disabled="true" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <hr/>
 
                 <h2>Metadata</h2>
@@ -199,7 +249,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- <tr th:each="field, fieldStat : ${manualInput.metadata}" th:if="${field.isActive}" >-->
                         <tr th:each="field, fieldStat : ${manualInput.metadata}" th:attr="class=${field.isActive ? '' : 'hidden'}">
                             <td>
                                 <input type="hidden" hidden="true" th:field="*{metadata[__${fieldStat.index}__].ordinalPosition}" />
@@ -239,7 +288,7 @@
                             </div>
                             <div class="modal-body">
                                 Select a CSV file...
-                                <input type="file" name="upload_file" class="btn btn-success-2" accept=".csv" style="display: block;" />
+                                <input type="file" name="upload_file" required="true" class="btn btn-success-2" accept=".csv" style="display: block;" />
                             </div>
                             <div class="modal-footer">
                                 <button type="submit" class="btn btn-generic">Upload</button>

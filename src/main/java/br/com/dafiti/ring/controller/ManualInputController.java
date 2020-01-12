@@ -28,6 +28,7 @@ import br.com.dafiti.ring.model.ManualInput;
 import br.com.dafiti.ring.model.DivisionGroup;
 import br.com.dafiti.ring.model.Metadata;
 import br.com.dafiti.ring.model.User;
+import br.com.dafiti.ring.option.FileType;
 import br.com.dafiti.ring.option.ImportLogStatus;
 import br.com.dafiti.ring.service.DivisionGroupService;
 import br.com.dafiti.ring.service.ImportLogService;
@@ -95,14 +96,17 @@ public class ManualInputController {
      *
      * @param model
      * @param principal
+     * @param fileType
      * @return
      */
     @GetMapping(path = "/create")
-    public String newManualInput(Model model, Principal principal) {
-
+    public String newManualInput(Model model,
+            Principal principal,
+            @RequestParam(value = "type") FileType fileType) {
+        
         User user = userService.findByUsername(principal.getName());
         DivisionGroup divisionGroup = user.getDivisionGroup();
-        ManualInput manualInput = new ManualInput(divisionGroup);
+        ManualInput manualInput = new ManualInput(divisionGroup, fileType);
 
         listGroupsIfPermited(model, principal, null);
 
@@ -374,7 +378,7 @@ public class ManualInputController {
      * @return
      */
     @PostMapping(path = "/uploadfile/{id}")
-    public String submit(@RequestParam("upload_file") MultipartFile multipartFile,
+    public String submit(@RequestParam(value = "upload_file", required = false) MultipartFile multipartFile,
             @PathVariable(value = "id") ManualInput manualInput,
             RedirectAttributes redirectAttributes,
             Principal principal,

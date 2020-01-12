@@ -28,9 +28,31 @@ import br.com.dafiti.ring.model.FileHandler;
 import br.com.dafiti.ring.model.ImportLog;
 import br.com.dafiti.ring.model.ManualInput;
 import br.com.dafiti.ring.option.ImportLogStatus;
+import com.google.api.client.auth.oauth2.Credential;
+import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
+import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
+import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
+import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.JsonFactory;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.google.api.client.util.store.FileDataStoreFactory;
+import com.google.api.services.sheets.v4.Sheets;
+import com.google.api.services.sheets.v4.SheetsScopes;
+import com.google.api.services.sheets.v4.model.ValueRange;
 import com.univocity.parsers.csv.CsvParser;
 import com.univocity.parsers.csv.CsvParserSettings;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +67,15 @@ import org.springframework.stereotype.Service;
 public class FileHandlerService extends JSONDocument {
 
     private final ImportLogService importLogService;
+    private static final String APPLICATION_NAME = "Ring Google Sheets API";
+    private static final JsonFactory JSON_FACTORY = JacksonFactory.getDefaultInstance();
+    private static final String TOKENS_DIRECTORY_PATH = System.getProperty("user.home") + "/.ring/gsheets/tokens";
+    /**
+     * Global instance of the scopes required by this quickstart. If modifying
+     * these scopes, delete your previously saved tokens/ folder.
+     */
+    private static final List<String> SCOPES = Collections.singletonList(SheetsScopes.SPREADSHEETS_READONLY);
+    private static final String CREDENTIALS_FILE_PATH = System.getProperty("user.home") + "/.ring/gsheets/credentials.json";
 
     @Autowired
     public FileHandlerService(ImportLogService importLogService,
@@ -56,27 +87,38 @@ public class FileHandlerService extends JSONDocument {
 
     public FileHandler getFile(ManualInput manualInput, InputStream inputStream, ImportLog log) {
 
-        String stringLog = "Setting CSV reader..."
-                + "\nQUOTE = " + manualInput.getQuoteChar()
-                + "\nDELIMITER = " + manualInput.getDelimiterChar()
-                + "\nESPACE = " + manualInput.getEscapeChar()
-                + "\nLINE_SEPRATOR = " + manualInput.getLineSeparator()
-                + "\nParsing CSV file..";
-
-        importLogService.updateLogText(log,
-                 null,
-                 Boolean.FALSE,
-                 stringLog);
-        return parseCSVFile(manualInput, inputStream, log);
-
-        /*switch(manualInput.getFileType()) {
+        switch (manualInput.getFileType()) {
             case CSV:
-                return parseCSVFile(file);
+                String stringLogCSV = "Setting CSV reader..."
+                        + "\nQUOTE = " + manualInput.getQuoteChar()
+                        + "\nDELIMITER = " + manualInput.getDelimiterChar()
+                        + "\nESPACE = " + manualInput.getEscapeChar()
+                        + "\nLINE_SEPRATOR = " + manualInput.getLineSeparator()
+                        + "\nParsing CSV file..";
+
+                importLogService.updateLogText(log,
+                        null,
+                        Boolean.FALSE,
+                        stringLogCSV);
+                return parseCSVFile(manualInput, inputStream, log);
             case XLSX:
-                
-                break;
-        }*/
-        //return new ArrayList<>();
+                return null;
+            case GSHEETS:
+                String stringLogSheets = "Reading Sheets..."
+                        + "\nKEY = " + manualInput.getSpreadsheetKey()
+                        + "\nSHEET NAME = " + manualInput.getSheetName();
+
+                importLogService.updateLogText(log,
+                        null,
+                        Boolean.FALSE,
+                        stringLogSheets);
+                try {
+                    return processSheets(manualInput, log);
+                } catch (Exception e) {
+                }
+            default:
+                return null;
+        }
     }
 
     private FileHandler parseCSVFile(ManualInput manualInput, InputStream inputStream, ImportLog log) {
@@ -97,14 +139,61 @@ public class FileHandlerService extends JSONDocument {
             return new FileHandler(parser.parseAll(inputStream));
         } catch (Exception ex) {
             importLogService.updateLogText(log,
-                     ImportLogStatus.ERROR,
-                     Boolean.TRUE,
-                     "ERROR:" + ex.toString());
+                    ImportLogStatus.ERROR,
+                    Boolean.TRUE,
+                    "ERROR:" + ex.toString());
             Logger.getLogger(FileHandlerService.class.getName()).log(Level.ALL, null, ex);
         }
         return new FileHandler();
     }
 
-    
+    private FileHandler processSheets(ManualInput manualInput, ImportLog log) throws IOException, GeneralSecurityException {
+        // Build a new authorized API client service.
+        final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
+        final String spreadsheetId = manualInput.getSpreadsheetKey();
+        final String range = manualInput.getSheetName() + "!" + manualInput.getSpreadsheetRange();
+        Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
+                .setApplicationName(APPLICATION_NAME)
+                .build();
+        ValueRange response = service.spreadsheets().values()
+                .get(spreadsheetId, range)
+                .execute();
+        ArrayList<List<Object>> values = (ArrayList) response.getValues();
+        if (values == null || values.isEmpty()) {
+            System.out.println("No data found.");
+            importLogService.updateLogText(log,
+                    ImportLogStatus.ERROR,
+                    Boolean.TRUE,
+                    "ERROR:" + "No data found.");
+            return null;
+        } else {
+            return new FileHandler(values);
+        }
+    }
+
+    /**
+     * Creates an authorized Credential object.
+     *
+     * @param HTTP_TRANSPORT The network HTTP Transport.
+     * @return An authorized Credential object.
+     * @throws IOException If the credentials.json file cannot be found.
+     */
+    private Credential getCredentials(final NetHttpTransport HTTP_TRANSPORT) throws IOException {
+        // Load client secrets.
+        InputStream in = new FileInputStream(new File(CREDENTIALS_FILE_PATH));// FileHandlerService.class.getResourceAsStream(CREDENTIALS_FILE_PATH);
+        if (in == null) {
+            throw new FileNotFoundException("Resource not found: " + CREDENTIALS_FILE_PATH);
+        }
+        GoogleClientSecrets clientSecrets = GoogleClientSecrets.load(JSON_FACTORY, new InputStreamReader(in));
+
+        // Build flow and trigger user authorization request.
+        GoogleAuthorizationCodeFlow flow = new GoogleAuthorizationCodeFlow.Builder(
+                HTTP_TRANSPORT, JSON_FACTORY, clientSecrets, SCOPES)
+                .setDataStoreFactory(new FileDataStoreFactory(new java.io.File(TOKENS_DIRECTORY_PATH)))
+                .setAccessType("offline")
+                .build();
+        LocalServerReceiver receiver = new LocalServerReceiver.Builder().setPort(8888).build();
+        return new AuthorizationCodeInstalledApp(flow, receiver).authorize("user");
+    }
 
 }

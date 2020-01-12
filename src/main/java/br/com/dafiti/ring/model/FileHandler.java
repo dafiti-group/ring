@@ -23,6 +23,7 @@
  */
 package br.com.dafiti.ring.model;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -47,6 +48,20 @@ public class FileHandler {
         for(int i = 0; i < this.header.length; i++) {
             this.header[i] = this.header[i].trim().toLowerCase();
         }
+    }
+    
+    public FileHandler(ArrayList<List<Object>> data) {
+        List<Object> headerAux = data.remove(0);
+        this.header = headerAux.toArray(new String[headerAux.size()]);
+        this.data = new ArrayList<>();
+        
+        for(int i = 0; i < this.header.length; i++) {
+            this.header[i] = this.header[i].trim().toLowerCase();
+        }
+        
+        data.forEach((obj) -> {
+            this.data.add(obj.toArray(new String[headerAux.size()]));
+        });
     }
     
     public int getColumnCount() {

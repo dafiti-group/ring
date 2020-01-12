@@ -12,11 +12,18 @@
                         <h2 class="page-title">Manual Input</h2>
                     </th>
                     <th class="btn-action">
-                        <a class="black-link" th:href="@{'/manual/input/create'}" title="Create Manual Input">
-                            <span class="glyphicon glyphicon-plus"></span>
-                        </a>
+
+                        <div class="btn-group">
+                            <a href="#" title="Create Manual Input" class="glyphicon glyphicon-plus dropdown-toggle link-btn-ico-size-12 black-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="black-link" th:href="@{'/manual/input/create?type=CSV'}">For CSV File</a></li>
+                                <li><a class="black-link" th:href="@{'/manual/input/create?type=XLSX'}">For XLSX File</a></li>
+                                <li><a class="black-link" th:href="@{'/manual/input/create?type=GSHEETS'}">For Google Sheets</a></li>
+                            </ul>
+                        </div>
                     </th>
-                    
+
                 </tr>
             </table>
 

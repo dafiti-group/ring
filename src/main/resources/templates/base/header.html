@@ -76,14 +76,14 @@
                     <ul class="sidebar-nav" id="sidebar">
                         <li th:classappend="${#httpServletRequest.getRequestURI() == '/' 
                             || #httpServletRequest.getRequestURI() == '/ring/'
-                            || #httpServletRequest.getRequestURI().contains('/detail/') ? 'active':''}"><a th:href="@{/}" title="Home"><span class="sub_icon glyphicon glyphicon-dashboard"></span>Home</a></li>
+                            || #httpServletRequest.getRequestURI().contains('/home') ? 'active':''}"><a th:href="@{/}" title="Home"><span class="sub_icon glyphicon glyphicon-home"></span>Home</a></li>
                         <li th:classappend="${#httpServletRequest.getRequestURI().contains('/manual/input') ? 'active':''}"><a th:href="@{/manual/input/list}" title="Manual Input"><span class="sub_icon glyphicon glyphicon-file"></span>Manual Input</a></li>
                         <li th:classappend="${#httpServletRequest.getRequestURI().contains('/search/') ? 'active':''}"><a th:href="@{/search/search}" title="Search"><span class="sub_icon glyphicon glyphicon-search"></span>Search</a></li>
                         <li th:classappend="${#httpServletRequest.getRequestURI().contains('/group/') ? 'active':''}"><a th:href="@{/group/list}" title="Group"><span class="sub_icon glyphicon glyphicon-tag"></span>Group</a></li>
                         <!--<li th:classappend="${#httpServletRequest.getRequestURI().contains('/log/') ? 'active':''}"><a th:href="@{/log/list}" title="Log"><span class="sub_icon glyphicon glyphicon-sunglasses"></span>Log</a></li>-->
                         <li th:classappend="${#httpServletRequest.getRequestURI().contains('/user/') ? 'active':''}"><a th:href="@{/user/list}" title="User"><span class="sub_icon glyphicon glyphicon-user"></span>User</a></li>
                         <li th:classappend="${#httpServletRequest.getRequestURI().contains('/settings/') ? 'active':''}"><a th:href="@{/settings/edit}" title="Configuration"><span class="sub_icon glyphicon glyphicon-cog"></span>Configuration</a></li>
-                        <li th:classappend="${#httpServletRequest.getRequestURI().contains('/swagger') ? 'active':''}"><a th:href="@{/swagger-ui.html}" title="API Rest"><span class="sub_icon glyphicon glyphicon-cog"></span>API Rest</a></li>
+                        <li th:classappend="${#httpServletRequest.getRequestURI().contains('/swagger') ? 'active':''}"><a th:href="@{/swagger-ui.html}" title="API Rest"><span class="sub_icon glyphicon glyphicon-console"></span>API Rest</a></li>
                     </ul>
 
                     <div class="login_logout">

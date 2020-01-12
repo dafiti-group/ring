@@ -943,6 +943,12 @@ input[type='file'] {
     margin-bottom: 10px;
 }
 
+.link-btn-ico-size-12 {
+    font-size: 12px;
+    background-color: transparent;
+    border: none;
+}
+
 .link-btn-ico-sm-3 {
     font-size: 16px;
     background-color: transparent;

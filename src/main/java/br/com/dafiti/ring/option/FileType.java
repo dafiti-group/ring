@@ -29,5 +29,6 @@ package br.com.dafiti.ring.option;
  */
 public enum FileType {
     CSV,
-    XLSX;
+    XLSX,
+    GSHEETS;
 }

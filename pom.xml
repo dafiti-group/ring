@@ -276,6 +276,34 @@
             <version>2.9.2</version>
         </dependency>
         
+        <!-- GOOGLE DEPENDENCIES FOR SHEETS API -->
+        <dependency>
+            <groupId>com.google.api-client</groupId>
+            <artifactId>google-api-client</artifactId>
+            <version>1.30.5</version>
+        </dependency>
+        
+        <!-- https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-java6 -->
+        <dependency>
+            <groupId>com.google.oauth-client</groupId>
+            <artifactId>google-oauth-client-java6</artifactId>
+            <version>1.30.5</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.google.oauth-client/google-oauth-client-jetty -->
+        <dependency>
+            <groupId>com.google.oauth-client</groupId>
+            <artifactId>google-oauth-client-jetty</artifactId>
+            <version>1.30.5</version>
+        </dependency>
+        
+        <!-- https://mvnrepository.com/artifact/com.google.apis/google-api-services-sheets -->
+        <dependency>
+            <groupId>com.google.apis</groupId>
+            <artifactId>google-api-services-sheets</artifactId>
+            <version>v4-rev48-1.21.0</version>
+        </dependency>
+
+        
     </dependencies>
 
     <build>
