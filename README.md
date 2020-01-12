@@ -94,10 +94,12 @@ Shows a quicky text about how to use the system
 - Define a description in the field ***Description***. This field is very important to understand it's purpose.
 > ***FOR CSV FILE***
     - The fields ***Delimiter***, ***Quote***, ***Escape*** and ***Line Separator*** have a default value and you change change as you wish.
+    
 > ***FOR GOOGLE SHEETS***
     - Define the google spreadsheet key in the field ***SpreadSheet Key*** to connect with Google Sheets API.
     - Define the sheet name in the field ***Sheet Name***.
     - Define the range to select the data in the sheet in the field ***Range***. This field is not required, but we suggest you define a range avoid errors.
+    
 - Define the the name of each column in metadata for your manual input in the field ***Field Name***. It defines what header is expected coming file to upload. It's not allowed 2 fields with the same name.
 - Define the the data type of each column in metadata for your manual input in the field ***Data Type***.
 - Define the the validation of each column in metadata for your manual input in the field ***Validation***.
