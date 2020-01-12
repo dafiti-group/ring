@@ -63,7 +63,22 @@ ring.enable.native.data.validation=true
 
 ##### SETTING UP GOOGLE SHEETS API `(Optional)`
 
-If you want Ring to be able to connect to google spreadsheet you need to configure the API
+If you want Ring to be able to connect to google spreadsheet you need to configure the API.
+> The configuration is maden by following the Google Sheets java API Quickstart documentation
+
+- Create the directory to store Google Sheets API configuration files
+    `mkdir -p ~/.ring/gsheets/`
+- Go to [Google Sheets java API documentation page](https://developers.google.com/sheets/api/quickstart/java)
+- Find the button ***Enable the Google Sheets API***, download the file *credentials.json* and save in the created directory.
+- Download and run the .jar file configureGoogleSheetsApi.jar with the credentials.json file path.
+```shell
+## This execution will open the browser to authenticate your user
+java -jar configureGoogleSheetsApi.jar ${CREDENTIALS_FILE_PATH}
+```
+- It will genrete a folder named `tokens`, copy the folder to the created directory.
+
+Now your API for Google Sheets ready to use with Ring.
+
 
 ##### DEPLOY
 Using [Apache Tomcat](http://tomcat.apache.org/):
