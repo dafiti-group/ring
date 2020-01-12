@@ -72,7 +72,7 @@ If you want Ring to be able to connect to google spreadsheet you need to configu
 - Find the button ***Enable the Google Sheets API***, download the file *credentials.json* and save in the created directory.
 - Download and run the .jar file configureGoogleSheetsApi.jar with the credentials.json file path.
 ```shell
-## This execution will open the browser to authenticate your user
+## This execution will open the browser to authenticate your Google account
 java -jar configureGoogleSheetsApi.jar ${CREDENTIALS_FILE_PATH}
 ```
 - It will genrete a folder named `tokens`, copy the folder to the created directory.
