@@ -2,7 +2,8 @@
 ### A new solution for user generated external data
 ###### Every day many companies are generating and processing new data, whether it is structured, semi-structured or non structured. All these data are used for analytics and decision taken at any moment, and in the mostly we need to join data from differents sources to improve our analysis and the best way to achieve this is through BigData.
 ###### Sometimes when we need to create a KIP or a new Dashboard, we may need some data not avalable in our data sources or for any reason it's not possible to extract, so we generate new files to integrate with our tools but it's hard to keep a pattern and define the best way to consume the files in the processes.
-###### **That's why Ring was created!** Ring is a tool to keep track of user generated NoSQL data, where you can define a template, upload files and validate uploaded data. This way Ring becomes a new source you can integrate with your tools extracting data via API, and Ring will take care of providing data in a more fault-tolerant way to your processes
+###### **That's why Ring was created!** Ring is a tool to keep track of user generated NoSQL data, where you can define a template, upload files and validate uploaded data. This way Ring becomes a new source you can integrate with your tools extracting data via API, and Ring will take care of providing more resilient data to your processes.
+###### You can define templates to upload CSV file, XLSX file or extract data by connecting to Google Sheets. By default Ring store data in an aws S3 bucket and Ring also has a class to store data in a MongoDB, but you can store data anywhere you want as json file. Ring storage is modular, so you can code a new class extending StorageAbstractionTemplate class implementing the main methods for CRUD operations and then say to StorageManagerService what module to use.
 
 ## Instalation
 
@@ -27,7 +28,7 @@ Using [Maven](https://maven.apache.org/):
 mkdir -p ~/tmp_files/ring/
 ```
 
-- Create the file ~/.ring/ring.properties with the following content
+- Create the file `~/.ring/ring.properties` with the following content
 
 ```properties
 ####### DATABASE CONFIGURATION #######
@@ -59,6 +60,10 @@ server.port=8080
 # Ring Enable native validation
 ring.enable.native.data.validation=true
 ```
+
+##### SETTING UP GOOGLE SHEETS API `(Optional)`
+
+If you want Ring to be able to connect to google spreadsheet you need to configure the API
 
 ##### DEPLOY
 Using [Apache Tomcat](http://tomcat.apache.org/):
