@@ -52,9 +52,15 @@ import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -102,7 +108,15 @@ public class FileHandlerService extends JSONDocument {
                         stringLogCSV);
                 return parseCSVFile(manualInput, inputStream, log);
             case XLSX:
-                return null;
+                try {
+                return parseXLSXFile(manualInput, inputStream, log);
+            } catch (Exception e) {
+                importLogService.updateLogText(log,
+                        ImportLogStatus.ERROR,
+                        Boolean.TRUE,
+                        "ERROR: " + e.toString());
+            }
+
             case GSHEETS:
                 String stringLogSheets = "Reading Sheets..."
                         + "\nKEY = " + manualInput.getSpreadsheetKey()
@@ -115,6 +129,10 @@ public class FileHandlerService extends JSONDocument {
                 try {
                     return processSheets(manualInput, log);
                 } catch (Exception e) {
+                    importLogService.updateLogText(log,
+                            ImportLogStatus.ERROR,
+                            Boolean.TRUE,
+                            "ERROR: " + e.toString());
                 }
             default:
                 return null;
@@ -147,11 +165,39 @@ public class FileHandlerService extends JSONDocument {
         return new FileHandler();
     }
 
+    private FileHandler parseXLSXFile(ManualInput manualInput, InputStream inputStream, ImportLog log) throws IOException {
+        FileHandler holder = new FileHandler();
+        Workbook workbook = new XSSFWorkbook(inputStream);
+        org.apache.poi.ss.usermodel.Sheet datatypeSheet = workbook.getSheet(manualInput.getSheetName());
+        Iterator<Row> iterator = datatypeSheet.iterator();
+
+        while (iterator.hasNext()) {
+
+            Row currentRow = iterator.next();
+            Iterator<Cell> cellIterator = currentRow.iterator();
+
+            while (cellIterator.hasNext()) {
+
+                Cell currentCell = cellIterator.next();
+                //getCellTypeEnum shown as deprecated for version 3.15
+                //getCellTypeEnum ill be renamed to getCellType starting from version 4.0
+                if (currentCell.getCellTypeEnum() == CellType.STRING) {
+                    System.out.print(currentCell.getStringCellValue() + "--");
+                } else if (currentCell.getCellTypeEnum() == CellType.NUMERIC) {
+                    System.out.print(currentCell.getNumericCellValue() + "--");
+                }
+
+            }
+
+        }
+        return null;
+    }
+
     private FileHandler processSheets(ManualInput manualInput, ImportLog log) throws IOException, GeneralSecurityException {
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         final String spreadsheetId = manualInput.getSpreadsheetKey();
-        final String range = manualInput.getSheetName() + "!" + manualInput.getSpreadsheetRange();
+        final String range = manualInput.getSheetName() + (manualInput.getSpreadsheetRange().equals("") ? "" : "!" + manualInput.getSpreadsheetRange());
         Sheets service = new Sheets.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();

@@ -91,7 +91,7 @@ public class JSONDocument {
             if (header.contains(fieldName)) {
                 fieldIndex.add(header.indexOf(fieldName));
             } else {
-                return null;
+                throw new Exception("ERROR: missing column in file: field \"" + fieldName + "\" not found!");
             }
         }
 
@@ -107,7 +107,7 @@ public class JSONDocument {
             String[] row = file.getData().get(line);
             // validate if the row has the same length of header
             if (row.length != header.size()) {
-                return null;
+                throw new Exception("ERROR: row size contains more columns than header: " + Arrays.asList(row).toString());
             }
             String businessKey = "";
 
@@ -121,20 +121,20 @@ public class JSONDocument {
                 if (metadataList.get(metadataList.indexOf(metadata)).getIsBusinessKey()) {
                     businessKey += value;
                 }
-                if(useNativeValidation) {
+                if (useNativeValidation) {
                     boolean valid = validate(value, dt, metadata.getTest(), metadata.getThreshold());
-                    if(!valid) {
+                    if (!valid) {
                         throw new Exception("ERROR: error validating data - field: " + field
-                                + ", value: " + value
-                                + ", data type: " + dt.toString()
-                                + ", test: " + metadata.getTest().toString()
-                                + ", threshold: " + metadata.getThreshold());
+                                + "\n, value: " + value
+                                + "\n, data type: " + dt.toString()
+                                + "\n, test: " + metadata.getTest().toString()
+                                + "\n, threshold: " + metadata.getThreshold());
                     }
                 }
                 // validate numerical data type
                 // I chose write a json string to be easer to understand
                 try {
-                    if (value == null) {
+                    if (value == null || value.isEmpty()) {
                         jsonLine[column] = "\"" + field + "\": null";
                     } else if (dt.equals(DataType.INTEGER)) {
                         jsonLine[column] = "\"" + field + "\": " + Integer.parseInt(value);
@@ -145,7 +145,7 @@ public class JSONDocument {
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
-                    return null;
+                    throw new Exception("ERROR: " + e.toString());
                 }
             }
 
@@ -170,7 +170,7 @@ public class JSONDocument {
                     documents.append(this.lineSeparator);
                 }
             } catch (Exception e) {
-                return null;
+                throw new Exception("ERROR: " + e.toString());
             }
         }
 
@@ -205,7 +205,7 @@ public class JSONDocument {
             if (header.contains(fieldName)) {
                 fieldIndex.add(header.indexOf(fieldName));
             } else {
-                return;
+                throw new Exception("ERROR: missing column in file: field \"" + fieldName + "\" not found!");
             }
         }
 
@@ -219,7 +219,7 @@ public class JSONDocument {
             String[] row = file.getData().get(line);
             // validate if the row has the same length of header
             if (row.length != header.size()) {
-                return;
+                throw new Exception("ERROR: row size contains more columns than header: " + Arrays.asList(row).toString());
             }
             String businessKey = "";
 
@@ -233,20 +233,20 @@ public class JSONDocument {
                 if (metadataList.get(metadataList.indexOf(metadata)).getIsBusinessKey()) {
                     businessKey += value;
                 }
-                if(useNativeValidation) {
+                if (useNativeValidation) {
                     boolean valid = validate(value, dt, metadata.getTest(), metadata.getThreshold());
-                    if(!valid) {
+                    if (!valid) {
                         throw new Exception("ERROR: error validating data - field: " + field
-                                + ", value: " + value
-                                + ", data type: " + dt.toString()
-                                + ", test: " + metadata.getTest().toString()
-                                + ", threshold: " + metadata.getThreshold());
+                                + "\n, value: " + value
+                                + "\n, data type: " + dt.toString()
+                                + "\n, test: " + metadata.getTest().toString()
+                                + "\n, threshold: " + metadata.getThreshold());
                     }
                 }
                 // validate numerical data type
                 // I chose write a json string to be easer to understand
                 try {
-                    if (value == null) {
+                    if (value == null || value.isEmpty()) {
                         jsonLine[column] = "\"" + field + "\": null";
                     } else if (dt.equals(DataType.INTEGER)) {
                         jsonLine[column] = "\"" + field + "\": " + Integer.parseInt(value);
@@ -257,7 +257,7 @@ public class JSONDocument {
                     }
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
-                    return;
+                    throw new Exception("ERROR: " + e.toString());
                 }
             }
 
@@ -280,7 +280,7 @@ public class JSONDocument {
                 listObjectGenerator.add(jsonToParse);
             } catch (Exception e) {
                 e.printStackTrace();
-                return;
+                throw new Exception("ERROR: " + e.toString());
             }
         }
 
@@ -292,11 +292,11 @@ public class JSONDocument {
      * @param dataType
      * @param conditional
      * @param threshold
-     * @return 
-     * @throws java.lang.Exception 
+     * @return
+     * @throws java.lang.Exception
      */
     private boolean validate(String value, DataType dataType, Conditional conditional, String threshold) throws Exception {
-        
+
         if (conditional.equals(Conditional.NONE)) {
             return true;
         }

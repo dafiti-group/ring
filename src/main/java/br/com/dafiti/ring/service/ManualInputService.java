@@ -116,7 +116,7 @@ public class ManualInputService {
     public ManualInput findById(Long id) {
         return manualInputRepository.findById(id).get();
     }
-    
+
     public List<ManualInput> findByNameContaining(String search) {
         return manualInputRepository.findByNameContaining(search);
     }
@@ -141,23 +141,28 @@ public class ManualInputService {
             if (log.getFinalized()) {
                 return;
             }
+            importLogService.updateLogText(log,
+                    ImportLogStatus.RUNNING,
+                    false,
+                    file.getData().size() + " rows processed.."
+                    + "\n Starting storage Module to save processed file..");
             storageManagerService.saveFile(manualInput, fileHandlerService, loadDate, file);
             if (log.getFinalized()) {
                 return;
             }
 
             importLogService.updateLogText(log,
-                     ImportLogStatus.SUCCESS,
-                     true,
-                     "PROCESS ENDED!");
+                    ImportLogStatus.SUCCESS,
+                    true,
+                    "PROCESS ENDED!");
         } catch (Exception e) {
-             Logger.getLogger(ManualInputService.class.getName()).log(Level.ALL, "Fail processing file!", e);
+            Logger.getLogger(ManualInputService.class.getName()).log(Level.ALL, "Fail processing file!", e);
             importLogService.updateLogText(log,
-                     ImportLogStatus.ERROR,
-                     true,
-                     "ERROR:" + e.toString() + "\n"
-                             + Arrays.asList(e.getStackTrace()).stream().map(m -> m.getClassName() + " -> method: "  + m.getMethodName() + " -> line number: " + m.getLineNumber() + "\n").collect(Collectors.toList()).toString()
-                             + "\nPROCESS ENDED!");
+                    ImportLogStatus.ERROR,
+                    true,
+                    "ERROR:" + e.toString() + "\n"
+                    + Arrays.asList(e.getStackTrace()).stream().map(m -> m.getClassName() + " -> method: " + m.getMethodName() + " -> line number: " + m.getLineNumber() + "\n").collect(Collectors.toList()).toString()
+                    + "\nPROCESS ENDED!");
         }
 
     }

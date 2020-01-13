@@ -400,8 +400,9 @@ public class ManualInputController {
 
         InputStream file = null;
         try {
-
-            file = multipartFile.getInputStream();
+            if(!manualInput.getFileType().equals(FileType.GSHEETS)) {
+                file = multipartFile.getInputStream();
+            }
 
         } catch (IOException ex) {
 

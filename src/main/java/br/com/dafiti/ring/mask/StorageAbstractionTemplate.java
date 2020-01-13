@@ -43,5 +43,5 @@ public abstract class StorageAbstractionTemplate {
 
     public abstract void deleteManualInput(ManualInput manualInput);
 
-    public abstract File extractCSV(ManualInput manualInput, ApiFilterDTO filter) throws IOException;
+    public abstract File extractCSV(ManualInput manualInput, ApiFilterDTO filter) throws IOException, Exception;
 }

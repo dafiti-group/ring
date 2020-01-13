@@ -174,7 +174,11 @@ public class ManualInput extends Tracker implements Serializable {
     }
 
     public void setSpreadsheetRange(String spreadsheetRange) {
-        this.spreadsheetRange = spreadsheetRange;
+        if(spreadsheetRange != null) {
+            this.spreadsheetRange = spreadsheetRange.toUpperCase();
+        } else {
+            this.spreadsheetRange = spreadsheetRange;
+        }
     }
     
     public boolean getAlterable() {

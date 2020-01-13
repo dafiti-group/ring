@@ -20,7 +20,7 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="black-link" th:href="@{'/manual/input/create?type=CSV'}">For CSV File</a></li>
-                                <li><a class="black-link" th:href="@{'/manual/input/create?type=XLSX'}">For XLSX File</a></li>
+                                <!--<li><a class="black-link" th:href="@{'/manual/input/create?type=XLSX'}">For XLSX File</a></li> -->
                                 <li><a class="black-link" th:href="@{'/manual/input/create?type=GSHEETS'}">For Google Sheets</a></li>
                             </ul>
                         </div>
@@ -286,12 +286,16 @@
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div class="modal-body">
+                            <div class="modal-body" th:if="${!manualInput.fileType.toString().equals('GSHEETS')}">
                                 Select a CSV file...
                                 <input type="file" name="upload_file" required="true" class="btn btn-success-2" accept=".csv" style="display: block;" />
                             </div>
+                            <div class="modal-body" th:if="${manualInput.fileType.toString().equals('GSHEETS')}">
+                                <pre>You are about to start extracting data from Google Sheets to your manual input.<br/>Click "Extract" to continue.</pre>
+                            </div>
                             <div class="modal-footer">
-                                <button type="submit" class="btn btn-generic">Upload</button>
+                                <button type="submit" class="btn btn-generic" th:if="${manualInput.fileType.toString().equals('GSHEETS')}">Extract</button>
+                                <button type="submit" class="btn btn-generic" th:if="${!manualInput.fileType.toString().equals('GSHEETS')}">Upload</button>
                                 <button type="button" class="btn btn-danger" data-dismiss="modal">Cancel</button>
                             </div>
                         </div>

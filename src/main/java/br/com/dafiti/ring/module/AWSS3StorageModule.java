@@ -51,6 +51,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -200,7 +202,7 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
     }
 
     @Override
-    public File extractCSV(ManualInput manualInput, ApiFilterDTO filter) throws IOException {
+    public File extractCSV(ManualInput manualInput, ApiFilterDTO filter) throws IOException, Exception {
 
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretKey);
         s3Client = AmazonS3ClientBuilder.standard()
@@ -219,17 +221,16 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
                     .collect(Collectors.toList());
 
             // download and save the files in a single file
-            String outputFileExtension = ".json.gizp";
             String outputFilePath = tmpFilePath + manualInput.getName() + "_" + manualInput.getId();
             // set compressed json file
-            File fileToDel = new File(outputFilePath + outputFileExtension);
+            File fileToDel = new File(outputFilePath + ".json.gizp");
             if (fileToDel.exists()) {
                 fileToDel.delete();
             }
             for (String key : keyList) {
                 S3Object o = s3Client.getObject(bucketName, key);
                 S3ObjectInputStream s3is = o.getObjectContent();
-                FileOutputStream fos = new FileOutputStream(new File(outputFilePath + outputFileExtension), true);
+                FileOutputStream fos = new FileOutputStream(new File(outputFilePath + ".json.gizp"), true);
                 byte[] read_buf = new byte[1024];
                 int read_len = 0;
                 while ((read_len = s3is.read(read_buf)) > 0) {
@@ -239,17 +240,16 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
             }
             
             // create a decompressed json file and delete compressed json file
-            decompressGzip(outputFilePath + outputFileExtension, outputFilePath + ".json");
+            String decompressedFilePath = decompressGzip(outputFilePath + ".json.gizp", outputFilePath);
             
             if (fileToDel.exists()) {
                 fileToDel.delete();
             }
-            outputFileExtension = ".json";
             
             // set json file
-            fileToDel = new File(outputFilePath + outputFileExtension);
+            fileToDel = new File(decompressedFilePath);
             
-            JsonNode jsonTree = new ObjectMapper().readTree(fileToDel);
+            JsonNode jsonTree = new ObjectMapper().readTree(new String(Files.readAllBytes(Paths.get(fileToDel.getAbsolutePath()))).replace("][", ","));
 
             Builder csvSchemaBuilder = CsvSchema.builder();
             
@@ -266,25 +266,23 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
             csvSchemaBuilder.addColumn("load_date");
             CsvSchema csvSchema = csvSchemaBuilder.build().withHeader();
 
-            outputFileExtension = ".csv";
             
             CsvMapper csvMapper = new CsvMapper();
             csvMapper.writerFor(JsonNode.class)
                     .with(csvSchema)
-                    .writeValue(new File(outputFilePath + outputFileExtension), jsonTree);
+                    .writeValue(new File(outputFilePath + ".csv"), jsonTree);
             
             // delete json file
             if (fileToDel.exists()) {
                 fileToDel.delete();
             }
 
-            return new File(outputFilePath + outputFileExtension);
+            return new File(outputFilePath + ".csv");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            throw new Exception("");
         }
 
-        return null;
     }
 
     public List<S3ObjectSummary> listObjects(String bucketName, String keyName) {
@@ -350,16 +348,25 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
     /**
      * 
      */
-    private void decompressGzip(String input, String output) throws IOException {
+    private String decompressGzip(String input, String output) throws IOException {
+        File toDel = new File(output);
+        if(toDel.exists()) {
+            toDel.delete();
+        }
+        
+        File tmp = File.createTempFile(output, ".json");
+        
         try (GZIPInputStream in = new GZIPInputStream(new FileInputStream(input))){
-            try (FileOutputStream out = new FileOutputStream(output)){
+            try (FileOutputStream out = new FileOutputStream(tmp)){
                 byte[] buffer = new byte[1024];
                 int len;
                 while((len = in.read(buffer)) != -1){
                     out.write(buffer, 0, len);
                 }
+                out.close();
             }
         }
+        return tmp.getAbsolutePath();
     }
     
     private String extractDatePathForS3(String DateFormatText, String splitBy) {

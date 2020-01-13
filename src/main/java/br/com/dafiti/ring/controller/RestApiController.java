@@ -141,7 +141,7 @@ public class RestApiController {
             
             resource = new InputStreamResource(new FileInputStream(file));
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(RestApiController.class.getName()).log(Level.SEVERE, null, ex);
             return ResponseEntity.notFound().build();
         }
