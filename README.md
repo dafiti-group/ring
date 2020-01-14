@@ -117,7 +117,7 @@ Using [Apache Tomcat](http://tomcat.apache.org/):
 When  inserting data in Ring, an important point to pay attention is about data type, mainly for DECIMAL and DATE values.
 
 - You may define a field as decimal and input a value formatted like 1.350,8 that Ring will try to parse, but is recomended to input decimal values dot separated (for example: 1350.8) to avoid errors in your data.
-- For fields defined as DATE or DATE_TIME it's important to follow the pattern format YYYY-MM-DD for DATE and YYYY-MM-DD HH:MI:SS for DATE_TIME
+- For fields defined as DATE or DATE_TIME it's important to follow the pattern format `YYYY-MM-DD` for *DATE* and `YYYY-MM-DD HH:MI:SS` for *DATE_TIME*.
 
 ###### Peculiarities of Different File Formats
 **CSV FILE**
