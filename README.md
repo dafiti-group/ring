@@ -111,15 +111,15 @@ Using [Apache Tomcat](http://tomcat.apache.org/):
 > You can change it's password later
 - After your first login go to Configuration section to configure your e-mail service. It's required to create new users and reset users password.
 
-##### IMPORTING DATA
-###### Data Type
+### IMPORTING DATA
+#### Data Type
 
 When  inserting data in Ring, an important point to pay attention is about data type, mainly for DECIMAL and DATE values.
 
 - You may define a field as decimal and input a value formatted like 1.350,8 that Ring will try to parse, but is recomended to input decimal values dot separated (for example: 1350.8) to avoid errors in your data.
 - For fields defined as DATE or DATE_TIME it's important to follow the pattern format `YYYY-MM-DD` for *DATE* and `YYYY-MM-DD HH:MI:SS` for *DATE_TIME*.
 
-###### Peculiarities of Different File Formats
+#### Peculiarities of Different File Formats
 **CSV FILE**
 > When inputing a CSV file it's important to follow the letter for each data type pattern, mainly about DATE and DATA_TIME
 
@@ -128,6 +128,10 @@ When  inserting data in Ring, an important point to pay attention is about data 
 
 **GOOGLE SHEETS**
 > You have to be careful about data in google sheets, because the data is retrieved as it is formatted, so if you have a decimal value formatted as money, the process will get a string value like 'R$ 1.154,12' and extraction will fail if your process if configured to receive a decimal value.
+
+#### Fields in File
+
+When you define the metadata of your manual input, the process expect to find all fields in the file, but you have more than the needed columns the process ignore the others.
 
 # User Manual
 this section explain the main funcionalities of Ring

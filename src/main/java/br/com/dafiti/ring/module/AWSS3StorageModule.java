@@ -274,10 +274,10 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
                 
                 CsvSchema csvSchema = null;
                 if(addHeaderToCsv) {
-                    csvSchemaBuilder.build().withHeader();
+                    csvSchema = csvSchemaBuilder.build().withHeader();
                     addHeaderToCsv = false;
                 } else {
-                    csvSchemaBuilder.build();
+                    csvSchema = csvSchemaBuilder.build();
                 }
                 
                 CsvMapper csvMapper = new CsvMapper();
@@ -294,7 +294,8 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
             return targetCsvFile;
 
         } catch (Exception e) {
-            throw new Exception("");
+            e.printStackTrace();
+            throw new Exception(e.toString());
         }
 
     }
