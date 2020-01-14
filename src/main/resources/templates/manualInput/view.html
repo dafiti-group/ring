@@ -19,9 +19,9 @@
                             <a href="#" title="Create Manual Input" class="glyphicon glyphicon-plus dropdown-toggle link-btn-ico-size-12 black-link" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="black-link" th:href="@{'/manual/input/create?type=CSV'}">For CSV File</a></li>
-                                <!--<li><a class="black-link" th:href="@{'/manual/input/create?type=XLSX'}">For XLSX File</a></li> -->
-                                <li><a class="black-link" th:href="@{'/manual/input/create?type=GSHEETS'}">For Google Sheets</a></li>
+                                <li><a class="black-link" th:href="@{'/manual-input/create?type=CSV'}">For CSV File</a></li>
+                                <li><a class="black-link" th:href="@{'/manual-input/create?type=XLSX'}">For XLSX File</a></li>
+                                <li><a class="black-link" th:href="@{'/manual-input/create?type=GSHEETS'}">For Google Sheets</a></li>
                             </ul>
                         </div>
                     </th>
@@ -38,8 +38,8 @@
                 <a class="glyphicon glyphicon-time pull-right link-btn-ico-sm-2 black-link icon-space" th:if="${showLog == null}" role="button" data-toggle="collapse" data-target="#collapseLogHistory" aria-expanded="false" aria-controls="collapseLogHistory" title="Log History"></a>
                 <a class="glyphicon glyphicon-time pull-right link-btn-ico-sm-2 black-link icon-space" th:if="${showLog != null}" role="button" data-toggle="collapse" data-target="#collapseLogHistory" aria-expanded="true" aria-controls="collapseLogHistory" title="Log History"></a>
                 <a class="glyphicon glyphicon-open pull-right link-btn-ico-sm-2 black-link icon-space" role="button" title="Import File" href="#" data-toggle="modal" data-target="#modalImportFile"></a>
-                <a class="glyphicon glyphicon-pencil pull-right link-btn-ico-sm-2 black-link icon-space" role="button" th:href="@{'/manual/input/edit/' + ${manualInput.id}}" title="Edit" ></a>
-                <a class="glyphicon glyphicon-trash pull-right link-btn-ico-sm-2 black-link" role="button" th:href="@{'/manual/input/delete/' + ${manualInput.id}}" title="Delete Manual Input" ></a>
+                <a class="glyphicon glyphicon-pencil pull-right link-btn-ico-sm-2 black-link icon-space" role="button" th:href="@{'/manual-input/edit/' + ${manualInput.id}}" title="Edit" ></a>
+                <a class="glyphicon glyphicon-trash pull-right link-btn-ico-sm-2 black-link" role="button" th:href="@{'/manual-input/delete/' + ${manualInput.id}}" title="Delete Manual Input" ></a>
             </div>
             <br/><br/>
 
@@ -105,7 +105,7 @@
                 </div>
             </div>
 
-            <form class="form-horizontal" enctype="multipart/form-data" th:method="post" th:object="${manualInput}" th:action="@{'/manual/input/uploadfile/' + ${manualInput.id}}">
+            <form class="form-horizontal" enctype="multipart/form-data" th:method="post" th:object="${manualInput}" th:action="@{'/manual-input/uploadfile/' + ${manualInput.id}}">
                 <input type='hidden' th:field='*{id}'/>
 
                 <div class="row">
@@ -232,6 +232,19 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- display this part if XLSX is the file type -->
+                <div th:if="${manualInput.fileType.toString().equals('XLSX')}" >
+                    
+                    <div class="col-lg-12">
+                        <label>Sheet Name:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" th:field="*{sheetName}" disabled="true" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <hr/>
 
@@ -286,10 +299,17 @@
                                     <span aria-hidden="true">&times;</span>
                                 </button>
                             </div>
-                            <div class="modal-body" th:if="${!manualInput.fileType.toString().equals('GSHEETS')}">
+                            <!-- for CSV -->
+                            <div class="modal-body" th:if="${manualInput.fileType.toString().equals('CSV')}">
                                 Select a CSV file...
                                 <input type="file" name="upload_file" required="true" class="btn btn-success-2" accept=".csv" style="display: block;" />
                             </div>
+                            <!-- for XLSX -->
+                            <div class="modal-body" th:if="${manualInput.fileType.toString().equals('XLSX')}">
+                                Select a XLSX file...
+                                <input type="file" name="upload_file" required="true" class="btn btn-success-2" accept=".xlsx" style="display: block;" />
+                            </div>
+                            <!-- for GSHEETS -->
                             <div class="modal-body" th:if="${manualInput.fileType.toString().equals('GSHEETS')}">
                                 <pre>You are about to start extracting data from Google Sheets to your manual input.<br/>Click "Extract" to continue.</pre>
                             </div>

@@ -59,6 +59,24 @@ server.port=8080
 
 # Ring Enable native validation
 ring.enable.native.data.validation=true
+
+# Defines how file will be sent to StorageManagerService class
+# as a JSON file = {} or as a JSONArray file = [{},{}]
+ring.json.file.type=JSONArray
+
+##### CUSTOM STORAGE CONFIGURATION #######
+# Ring has S3 as default configuration
+
+# Ring MongoDB
+mongo.datasource.uri=mongodb://127.0.0.1:27017/?gssapiServiceName=mongodb
+
+
+# Ring AWS S3
+aws.s3.access.key=<aws-access-key>
+aws.s3.secret.key=<aws-secret-key>
+aws.s3.bucket.name=<aws-s3-bucket-name>
+aws.s3.bucket.key=ring
+aws.s3.bucket.region=<aws-s3-bucket-region>
 ```
 
 ##### SETTING UP GOOGLE SHEETS API `(Optional)`
@@ -67,15 +85,15 @@ If you want Ring to be able to connect to google spreadsheet you need to configu
 > The configuration is maden by following the Google Sheets java API Quickstart documentation
 
 - Create the directory to store Google Sheets API configuration files
-    `mkdir -p ~/.ring/gsheets/`
+    `mkdir -p ~/.ring/gsheets/tokens/`
 - Go to [Google Sheets java API documentation page](https://developers.google.com/sheets/api/quickstart/java)
-- Find the button ***Enable the Google Sheets API***, download the file *credentials.json* and save in the created directory.
+- Find the button ***Enable the Google Sheets API***, download the file *credentials.json* and save in the directory `~/.ring/gsheets/`.
 - Download and run the .jar file configureGoogleSheetsApi.jar with the credentials.json file path.
 ```shell
 ## This execution will open the browser to authenticate your Google account
 java -jar configureGoogleSheetsApi.jar ${CREDENTIALS_FILE_PATH}
 ```
-- It will genrete a folder named `tokens`, copy the folder to the created directory.
+- It will genrete a folder named `tokens`, copy the file ***StoredCredential*** from inside generated folder tokens to `~/.ring/gsheets/tokens/`.
 
 Now your API for Google Sheets ready to use with Ring.
 
@@ -92,6 +110,24 @@ Using [Apache Tomcat](http://tomcat.apache.org/):
     - passowrd: ***rmanager***
 > You can change it's password later
 - After your first login go to Configuration section to configure your e-mail service. It's required to create new users and reset users password.
+
+##### IMPORTING DATA
+###### Data Type
+
+When  inserting data in Ring, an important point to pay attention is about data type, mainly for DECIMAL and DATE values.
+
+- You may define a field as decimal and input a value formatted like 1.350,8 that Ring will try to parse, but is recomended to input decimal values dot separated (for example: 1350.8) to avoid errors in your data.
+- For fields defined as DATE or DATE_TIME it's important to follow the pattern format YYYY-MM-DD for DATE and YYYY-MM-DD HH:MI:SS for DATE_TIME
+
+###### Peculiarities of Different File Formats
+**CSV FILE**
+> When inputing a CSV file it's important to follow the letter for each data type pattern, mainly about DATE and DATA_TIME
+
+**XLSX FILE**
+> Fields formatted as Date in the file should be automaticaly parsed to YYYY-MM-DD HH:MI:SS format during import process, and you should not worry about formatted decimal fields, the process should be able to identify the configurations of an xlsx file.
+
+**GOOGLE SHEETS**
+> You have to be careful about data in google sheets, because the data is retrieved as it is formatted, so if you have a decimal value formatted as money, the process will get a string value like 'R$ 1.154,12' and extraction will fail if your process if configured to receive a decimal value.
 
 # User Manual
 this section explain the main funcionalities of Ring
@@ -116,13 +152,17 @@ Shows a quicky text about how to use the system
     
     - The fields ***Delimiter***, ***Quote***, ***Escape*** and ***Line Separator*** have a default value and you change change as you wish.
     
+    > ***FOR XLSX FILE***
+    
+    - Define the sheet name in the field ***Sheet Name***. The sheet name to find in file to process.
+    
     > ***FOR GOOGLE SHEETS***
     
     - Define the google spreadsheet key in the field ***SpreadSheet Key*** to connect with Google Sheets API.
-    - Define the sheet name in the field ***Sheet Name***.
-    - Define the range to select the data in the sheet in the field ***Range***. This field is not required, but we suggest you define a range avoid errors.
+    - Define the sheet name in the field ***Sheet Name***. The sheet name to find in file to process.
+    - Define the range to select the data in the sheet in the field ***Range***. This field is not required, but we suggest you define a range avoid errors. Examples:-> A1:E, B:G, C13:W120
     
-- Define the the name of each column in metadata for your manual input in the field ***Field Name***. It defines what header is expected coming file to upload. It's not allowed 2 fields with the same name.
+- Define the the name of each column in metadata for your manual input in the field ***Field Name***. It defines what header is expected in the coming file to upload. It's not allowed 2 fields with the same name.
 - Define the the data type of each column in metadata for your manual input in the field ***Data Type***.
 - Define the the validation of each column in metadata for your manual input in the field ***Validation***.
 - Define the the Threshold of each column in metadata for your manual input in the field ***Threshold***. It defines what value to campare for validation.

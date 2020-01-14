@@ -63,7 +63,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * @author guilherme.almeida
  */
 @Controller
-@RequestMapping("/manual/input")
+@RequestMapping("/manual-input")
 public class ManualInputController {
 
     private final MetadataService metadataService;
@@ -212,7 +212,7 @@ public class ManualInputController {
         manualInputService.save(manualInput);
         storageManagerService.createOrUpdateManualInput(manualInput, Boolean.TRUE);
 
-        return "redirect:/manual/input/view/" + manualInput.getId();
+        return "redirect:/manual-input/view/" + manualInput.getId();
     }
 
     /**
@@ -263,7 +263,7 @@ public class ManualInputController {
 
         manualInputService.save(manualInput);
 
-        return "redirect:/manual/input/view/" + manualInput.getId();
+        return "redirect:/manual-input/view/" + manualInput.getId();
     }
 
     /**
@@ -311,7 +311,7 @@ public class ManualInputController {
 
         if (!hasPermission(principal, manualInput)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to edit a Manul Input out of your group!");
-            return "redirect:/manual/input/view/" + manualInput.getId();
+            return "redirect:/manual-input/view/" + manualInput.getId();
         }
 
         model.addAttribute("manualInput", manualInput);
@@ -334,13 +334,13 @@ public class ManualInputController {
 
         if (!hasPermission(principal, manualInput)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to delete a Manul Input out of your group!");
-            return "redirect:/manual/input/view/" + manualInput.getId();
+            return "redirect:/manual-input/view/" + manualInput.getId();
         }
 
         storageManagerService.deleteManualInput(manualInput);
         manualInputService.delete(manualInput);
         redirectAttributes.addFlashAttribute("success", "Manual Input was deleted!");
-        return "redirect:/manual/input/list";
+        return "redirect:/manual-input/list";
     }
 
     /**
@@ -386,7 +386,7 @@ public class ManualInputController {
 
         if (!hasPermission(principal, manualInput)) {
             redirectAttributes.addFlashAttribute("errorMessage", "Sorry! You don't have permission to upload a file here!");
-            return "redirect:/manual/input/view/" + manualInput.getId();
+            return "redirect:/manual-input/view/" + manualInput.getId();
         }
 
         ImportLog log = new ImportLog();
@@ -411,12 +411,12 @@ public class ManualInputController {
                     true,
                     "ERROR: " + ex.toString());
             Logger.getLogger(ManualInputController.class.getName()).log(Level.SEVERE, null, ex);
-            return "redirect:/manual/input/view/" + manualInput.getId() + "?log_expanded=true";
+            return "redirect:/manual-input/view/" + manualInput.getId() + "?log_expanded=true";
 
         }
         manualInputService.process(manualInput, file, log);
 
-        return "redirect:/manual/input/view/" + manualInput.getId() + "?log_expanded=true";
+        return "redirect:/manual-input/view/" + manualInput.getId() + "?log_expanded=true";
     }
 
     /**
@@ -429,7 +429,7 @@ public class ManualInputController {
 
         User user = userService.findByUsername(principal.getName());
 
-        if (user.getRoles().contains(roleService.findByName("LORD"))
+        if ((user != null && user.getRoles().contains(roleService.findByName("LORD")))
                 || manualInput.getDivisionGroups().contains(user.getDivisionGroup())) {
             return true;
         }

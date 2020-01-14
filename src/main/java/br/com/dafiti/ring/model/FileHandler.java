@@ -40,7 +40,7 @@ public class FileHandler {
     public FileHandler(){
         
     }
-    
+    // constructor used to receive data from CSV file
     public FileHandler(List<String[]> data) {
         this.header = data.remove(0);
         this.data = data;
@@ -50,6 +50,7 @@ public class FileHandler {
         }
     }
     
+    // constructor used to receive data from Google Sheets
     public FileHandler(ArrayList<List<Object>> data) {
         List<Object> headerAux = data.remove(0);
         this.header = headerAux.toArray(new String[headerAux.size()]);
@@ -74,5 +75,18 @@ public class FileHandler {
     
     public String[] getHeader() {
         return this.header;
+    }
+
+    // method used to receive header from XLSX file
+    public void setHeader(String[] header) {
+        this.header = new String[header.length];
+        for(int i = 0; i < header.length; i++) {
+            String field = header[i].toLowerCase();
+            this.header[i] = field;
+        }
+    }
+
+    public void setData(List<String[]> data) {
+        this.data = data;
     }
 }

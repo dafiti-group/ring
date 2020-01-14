@@ -139,7 +139,13 @@ public class JSONDocument {
                     } else if (dt.equals(DataType.INTEGER)) {
                         jsonLine[column] = "\"" + field + "\": " + Integer.parseInt(value);
                     } else if (dt.equals(DataType.DECIMAL)) {
-                        jsonLine[column] = "\"" + field + "\": " + Double.parseDouble(value);
+                        Double doubleValue;
+                        try {
+                            doubleValue = Double.parseDouble(value);
+                        } catch (Exception e) {
+                            doubleValue = Double.parseDouble(value.replace(".", "").replace(",", "."));
+                        }
+                        jsonLine[column] = "\"" + field + "\": " + doubleValue;
                     } else {
                         jsonLine[column] = "\"" + field + "\": \"" + value.replace("\"", "\\\"") + "\"";
                     }
@@ -251,7 +257,13 @@ public class JSONDocument {
                     } else if (dt.equals(DataType.INTEGER)) {
                         jsonLine[column] = "\"" + field + "\": " + Integer.parseInt(value);
                     } else if (dt.equals(DataType.DECIMAL)) {
-                        jsonLine[column] = "\"" + field + "\": " + Double.parseDouble(value);
+                        Double doubleValue;
+                        try {
+                            doubleValue = Double.parseDouble(value);
+                        } catch (Exception e) {
+                            doubleValue = Double.parseDouble(value.replace(".", "").replace(",", "."));
+                        }
+                        jsonLine[column] = "\"" + field + "\": " + doubleValue;
                     } else {
                         jsonLine[column] = "\"" + field + "\": \"" + value.replace("\"", "\\\"") + "\"";
                     }
@@ -335,7 +347,11 @@ public class JSONDocument {
                     numThreshold = Float.parseFloat(threshold);
                 }
             } catch (Exception e) {
-                return false;
+                try {
+                    number = Float.parseFloat(value.replace(".", "").replace(",", "."));
+                } catch (Exception ex) {
+                    return false;
+                }
             }
             switch (conditional) {
                 case EQUAL:

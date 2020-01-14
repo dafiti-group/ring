@@ -51,8 +51,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -147,7 +145,7 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
                     + extractDatePathForS3(LoadDateForPartition, " ")
                     + LoadDateForPartition.replace(" ", "_") + ".json.gzip";
             Upload upload = transferManager.upload(bucketName, s3Path, new File(outputFilePath));
-            
+
             System.out.println("Object upload started");
 
             // Optionally, wait for the upload to finish before continuing.
@@ -185,7 +183,7 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
                     .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
                     .withRegion(clientRegion)
                     .build();
-            
+
             List<S3ObjectSummary> summaries = listObjects(bucketName, keyName + "/" + manualInput.getName());
             String[] keys = summaries.stream()
                     .map(m -> m.getKey())
@@ -221,63 +219,79 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
                     .collect(Collectors.toList());
 
             // download and save the files in a single file
-            String outputFilePath = tmpFilePath + manualInput.getName() + "_" + manualInput.getId();
+            File tmpDir = new File(tmpFilePath);
+            String outputFilePath = manualInput.getName() + "_" + manualInput.getId();
+            File targetCsvFile = File.createTempFile(outputFilePath, ".csv", tmpDir);
+            if (targetCsvFile.exists()) {
+                targetCsvFile.delete();
+            }
             // set compressed json file
-            File fileToDel = new File(outputFilePath + ".json.gizp");
-            if (fileToDel.exists()) {
-                fileToDel.delete();
+            //File fileToDel = new File(outputFilePath + ".json.gizp");
+            File compressedFile = File.createTempFile(outputFilePath, ".json.gizp", tmpDir);
+            if (compressedFile.exists()) {
+                compressedFile.delete();
             }
-            for (String key : keyList) {
-                S3Object o = s3Client.getObject(bucketName, key);
-                S3ObjectInputStream s3is = o.getObjectContent();
-                FileOutputStream fos = new FileOutputStream(new File(outputFilePath + ".json.gizp"), true);
-                byte[] read_buf = new byte[1024];
-                int read_len = 0;
-                while ((read_len = s3is.read(read_buf)) > 0) {
-                    fos.write(read_buf, 0, read_len);
-                }
-                fos.close();
-            }
-            
-            // create a decompressed json file and delete compressed json file
-            String decompressedFilePath = decompressGzip(outputFilePath + ".json.gizp", outputFilePath);
-            
-            if (fileToDel.exists()) {
-                fileToDel.delete();
-            }
-            
-            // set json file
-            fileToDel = new File(decompressedFilePath);
-            
-            JsonNode jsonTree = new ObjectMapper().readTree(new String(Files.readAllBytes(Paths.get(fileToDel.getAbsolutePath()))).replace("][", ","));
 
+            // preapare CSV schema
             Builder csvSchemaBuilder = CsvSchema.builder();
-            
+
             csvSchemaBuilder.setColumnSeparator(filter.getDelimiter());
             csvSchemaBuilder.setQuoteChar(filter.getQuote());
             csvSchemaBuilder.setEscapeChar(filter.getEscape());
             csvSchemaBuilder.setLineSeparator(filter.getLineSeparator());
-            
+
             for (Metadata metadata : manualInput.getMetadata()) {
                 csvSchemaBuilder.addColumn(metadata.getFieldName());
             }
             csvSchemaBuilder.addColumn("business_key");
             csvSchemaBuilder.addColumn("delta_partition");
             csvSchemaBuilder.addColumn("load_date");
-            CsvSchema csvSchema = csvSchemaBuilder.build().withHeader();
+            
+            boolean addHeaderToCsv = true;
 
-            
-            CsvMapper csvMapper = new CsvMapper();
-            csvMapper.writerFor(JsonNode.class)
-                    .with(csvSchema)
-                    .writeValue(new File(outputFilePath + ".csv"), jsonTree);
-            
-            // delete json file
-            if (fileToDel.exists()) {
-                fileToDel.delete();
+            for (String key : keyList) {
+                S3Object o = s3Client.getObject(bucketName, key);
+                S3ObjectInputStream s3is = o.getObjectContent();
+                FileOutputStream fos = new FileOutputStream(compressedFile, false);
+                byte[] read_buf = new byte[1024];
+                int read_len = 0;
+                while ((read_len = s3is.read(read_buf)) > 0) {
+                    fos.write(read_buf, 0, read_len);
+                }
+                fos.close();
+
+                // create a decompressed json file and delete compressed json file
+                String decompressedFilePath = decompressGzip(compressedFile.getAbsolutePath(), outputFilePath, ".json", tmpDir);
+
+                if (compressedFile.exists()) {
+                    compressedFile.delete();
+                }
+
+                // set json file
+                File decompressedJsonFile = new File(decompressedFilePath);
+
+                JsonNode jsonTree = new ObjectMapper().readTree(decompressedJsonFile);
+                
+                CsvSchema csvSchema = null;
+                if(addHeaderToCsv) {
+                    csvSchemaBuilder.build().withHeader();
+                    addHeaderToCsv = false;
+                } else {
+                    csvSchemaBuilder.build();
+                }
+                
+                CsvMapper csvMapper = new CsvMapper();
+                csvMapper.writerFor(JsonNode.class)
+                        .with(csvSchema)
+                        .writeValue(new FileOutputStream(targetCsvFile, true), jsonTree);
+
+                // delete json file
+                if (decompressedJsonFile.exists()) {
+                    decompressedJsonFile.delete();
+                }
             }
 
-            return new File(outputFilePath + ".csv");
+            return targetCsvFile;
 
         } catch (Exception e) {
             throw new Exception("");
@@ -298,7 +312,7 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
     }
 
     /**
-     * 
+     *
      */
     private boolean evaluate(ApiFilterDTO filter, String key) {
 
@@ -344,23 +358,23 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
 
         return false;
     }
-    
+
     /**
-     * 
+     *
      */
-    private String decompressGzip(String input, String output) throws IOException {
+    private String decompressGzip(String input, String output, String extension, File tmpDir) throws IOException {
         File toDel = new File(output);
-        if(toDel.exists()) {
+        if (toDel.exists()) {
             toDel.delete();
         }
-        
-        File tmp = File.createTempFile(output, ".json");
-        
-        try (GZIPInputStream in = new GZIPInputStream(new FileInputStream(input))){
-            try (FileOutputStream out = new FileOutputStream(tmp)){
+
+        File tmp = File.createTempFile(output, extension, tmpDir);
+
+        try (GZIPInputStream in = new GZIPInputStream(new FileInputStream(input))) {
+            try (FileOutputStream out = new FileOutputStream(tmp)) {
                 byte[] buffer = new byte[1024];
                 int len;
-                while((len = in.read(buffer)) != -1){
+                while ((len = in.read(buffer)) != -1) {
                     out.write(buffer, 0, len);
                 }
                 out.close();
@@ -368,18 +382,18 @@ public class AWSS3StorageModule extends StorageAbstractionTemplate {
         }
         return tmp.getAbsolutePath();
     }
-    
+
     private String extractDatePathForS3(String DateFormatText, String splitBy) {
-        
+
         String date = DateFormatText.split(splitBy)[0];
         String[] dateParts = date.split("-");
         String path = "";
-        String [] parts = {"year", "month", "day"};
-        for(int i = 0; i < dateParts.length; i++) {
+        String[] parts = {"year", "month", "day"};
+        for (int i = 0; i < dateParts.length; i++) {
             String part = dateParts[i];
             path += "/" + parts[i] + "=" + part;
         }
-        
+
         return path + "/";
     }
 

@@ -50,14 +50,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.security.GeneralSecurityException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -95,17 +96,6 @@ public class FileHandlerService extends JSONDocument {
 
         switch (manualInput.getFileType()) {
             case CSV:
-                String stringLogCSV = "Setting CSV reader..."
-                        + "\nQUOTE = " + manualInput.getQuoteChar()
-                        + "\nDELIMITER = " + manualInput.getDelimiterChar()
-                        + "\nESPACE = " + manualInput.getEscapeChar()
-                        + "\nLINE_SEPRATOR = " + manualInput.getLineSeparator()
-                        + "\nParsing CSV file..";
-
-                importLogService.updateLogText(log,
-                        null,
-                        Boolean.FALSE,
-                        stringLogCSV);
                 return parseCSVFile(manualInput, inputStream, log);
             case XLSX:
                 try {
@@ -118,28 +108,32 @@ public class FileHandlerService extends JSONDocument {
             }
 
             case GSHEETS:
-                String stringLogSheets = "Reading Sheets..."
-                        + "\nKEY = " + manualInput.getSpreadsheetKey()
-                        + "\nSHEET NAME = " + manualInput.getSheetName();
-
-                importLogService.updateLogText(log,
-                        null,
-                        Boolean.FALSE,
-                        stringLogSheets);
                 try {
-                    return processSheets(manualInput, log);
-                } catch (Exception e) {
-                    importLogService.updateLogText(log,
-                            ImportLogStatus.ERROR,
-                            Boolean.TRUE,
-                            "ERROR: " + e.toString());
-                }
+                return processSheets(manualInput, log);
+            } catch (Exception e) {
+                importLogService.updateLogText(log,
+                        ImportLogStatus.ERROR,
+                        Boolean.TRUE,
+                        "ERROR: " + e.toString());
+            }
             default:
                 return null;
         }
     }
 
     private FileHandler parseCSVFile(ManualInput manualInput, InputStream inputStream, ImportLog log) {
+
+        String stringLogCSV = "Setting CSV reader..."
+                + "\nQUOTE = " + manualInput.getQuoteChar()
+                + "\nDELIMITER = " + manualInput.getDelimiterChar()
+                + "\nESPACE = " + manualInput.getEscapeChar()
+                + "\nLINE_SEPRATOR = " + manualInput.getLineSeparator()
+                + "\nParsing CSV file..";
+
+        importLogService.updateLogText(log,
+                null,
+                Boolean.FALSE,
+                stringLogCSV);
 
         CsvParserSettings settings = new CsvParserSettings();
         settings.getFormat().setDelimiter(manualInput.getDelimiterChar());
@@ -166,7 +160,8 @@ public class FileHandlerService extends JSONDocument {
     }
 
     private FileHandler parseXLSXFile(ManualInput manualInput, InputStream inputStream, ImportLog log) throws IOException {
-        FileHandler holder = new FileHandler();
+        List<String[]> fileContent = new ArrayList<>();
+
         Workbook workbook = new XSSFWorkbook(inputStream);
         org.apache.poi.ss.usermodel.Sheet datatypeSheet = workbook.getSheet(manualInput.getSheetName());
         Iterator<Row> iterator = datatypeSheet.iterator();
@@ -174,26 +169,85 @@ public class FileHandlerService extends JSONDocument {
         while (iterator.hasNext()) {
 
             Row currentRow = iterator.next();
-            Iterator<Cell> cellIterator = currentRow.iterator();
+            int rowNum = currentRow.getRowNum();
+            int minColIdx = currentRow.getFirstCellNum();
+            int maxColIdx = currentRow.getLastCellNum();
+            String[] targetRow = new String[maxColIdx - minColIdx];
 
-            while (cellIterator.hasNext()) {
-
-                Cell currentCell = cellIterator.next();
-                //getCellTypeEnum shown as deprecated for version 3.15
-                //getCellTypeEnum ill be renamed to getCellType starting from version 4.0
-                if (currentCell.getCellTypeEnum() == CellType.STRING) {
-                    System.out.print(currentCell.getStringCellValue() + "--");
-                } else if (currentCell.getCellTypeEnum() == CellType.NUMERIC) {
-                    System.out.print(currentCell.getNumericCellValue() + "--");
+            for (int i = minColIdx; i < maxColIdx; i++) {
+                Cell cell = currentRow.getCell(i);
+                //targetRow[i] = 
+                switch (cell.getCellType()) {
+                    case STRING:
+                        targetRow[i] = cell.getStringCellValue();
+                        break;
+                    case NUMERIC:
+                        targetRow[i] = Double.toString(cell.getNumericCellValue());
+                        break;
+                    case BOOLEAN:
+                        targetRow[i] = Boolean.toString(cell.getBooleanCellValue());
+                        break;
+                    case FORMULA:
+                        switch (cell.getCachedFormulaResultType()) {
+                            case STRING:
+                                targetRow[i] = cell.getStringCellValue();
+                                break;
+                            case NUMERIC:
+                                targetRow[i] = Double.toString(cell.getNumericCellValue());
+                                break;
+                            case BOOLEAN:
+                                targetRow[i] = Boolean.toString(cell.getBooleanCellValue());
+                                break;
+                            default:
+                                try {
+                                Date cellDate = cell.getDateCellValue();
+                                SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                                targetRow[i] = dateFormat.format(cellDate);
+                            } catch (Exception e) {
+                                importLogService.updateLogText(log,
+                                        ImportLogStatus.RUNNING,
+                                        Boolean.FALSE,
+                                        "WARNING: Could not identify data type in position " + rowNum + ":" + (i + 1) + ". Setting value to null");
+                            }
+                            break;
+                        }
+                        break;
+                    default:
+                        try {
+                        Date cellDate = cell.getDateCellValue();
+                        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        targetRow[i] = dateFormat.format(cellDate);
+                    } catch (Exception e) {
+                        importLogService.updateLogText(log,
+                                ImportLogStatus.RUNNING,
+                                Boolean.FALSE,
+                                "WARNING: Could not identify data type in position " + rowNum + ":" + (i + 1) + ". Setting value to null");
+                    }
+                    break;
                 }
 
             }
 
+            fileContent.add(targetRow);
         }
-        return null;
+
+        FileHandler holder = new FileHandler();
+        holder.setHeader(fileContent.remove(0));
+        holder.setData(fileContent);
+        return holder;
     }
 
     private FileHandler processSheets(ManualInput manualInput, ImportLog log) throws IOException, GeneralSecurityException {
+
+        String stringLogSheets = "Reading Sheets..."
+                + "\nKEY = " + manualInput.getSpreadsheetKey()
+                + "\nSHEET NAME = " + manualInput.getSheetName();
+
+        importLogService.updateLogText(log,
+                null,
+                Boolean.FALSE,
+                stringLogSheets);
+
         // Build a new authorized API client service.
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         final String spreadsheetId = manualInput.getSpreadsheetKey();
@@ -210,7 +264,7 @@ public class FileHandlerService extends JSONDocument {
             importLogService.updateLogText(log,
                     ImportLogStatus.ERROR,
                     Boolean.TRUE,
-                    "ERROR:" + "No data found.");
+                    "ERROR: No data found.");
             return null;
         } else {
             return new FileHandler(values);

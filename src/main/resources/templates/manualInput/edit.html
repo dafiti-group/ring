@@ -11,7 +11,7 @@
 
             <h2>Manual Input</h2>
 
-            <form class="form-horizontal" method="post" th:action="@{/manual/input/save}" th:object="${manualInput}">
+            <form class="form-horizontal" method="post" th:action="@{/manual-input/save}" th:object="${manualInput}">
                 <input type='hidden' th:field='*{id}'/>
                 <input type="hidden" th:field="*{divisionGroups}" th:if="${groups == null}"/>
 
@@ -148,6 +148,19 @@
                         <div class="form-group">
                             <div class="col-sm-12">
                                 <input type="text" class="form-control" th:field="*{spreadsheetRange}" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- display this part if XLSX is the file type -->
+                <div th:if="${manualInput.fileType.toString().equals('XLSX')}" >
+                    
+                    <div class="col-lg-12">
+                        <label>Sheet Name:</label>
+                        <div class="form-group">
+                            <div class="col-sm-12">
+                                <input type="text" class="form-control" th:field="*{sheetName}" required="true" />
                             </div>
                         </div>
                     </div>
