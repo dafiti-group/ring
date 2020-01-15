@@ -181,7 +181,7 @@ public class MongoDBStorageModule extends StorageAbstractionTemplate {
         command = command.replace("${COLLECTION_NAME}", manualInput.getName());
         command = command.replace("${OUTPUT_FILE}", outputFilePath);
 
-        String fieldList = "business_key,load_date";
+        String fieldList = "custom_primary_key,load_date";
         List<Metadata> sortedMetadata = manualInput.getMetadata()
                 .stream()
                 .sorted((s1, s2) -> s1.getOrdinalPosition().compareTo(s2.getOrdinalPosition()))

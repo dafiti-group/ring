@@ -141,7 +141,12 @@ public class ManualInputController {
             return "manualInput/edit";
         }
 
-        manualInput.getMetadata().get(index).setIsActive(Boolean.FALSE);
+        Metadata metadata = manualInput.getMetadata().get(index);
+        if(metadata.getPending()) {
+            manualInput.getMetadata().remove(index);
+        } else {
+            metadata.setIsActive(Boolean.FALSE);
+        }
         model.addAttribute("manualInput", manualInput);
 
         return "manualInput/edit";

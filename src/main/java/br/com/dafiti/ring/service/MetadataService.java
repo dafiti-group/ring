@@ -66,7 +66,7 @@ public class MetadataService {
                 .collect(Collectors.toList());
 
         // validate if user is tring to add 2 fields with the same name
-        if (activeFieldsDuplicated.size() > 1) {
+        if (activeFieldsDuplicated.size() > 0) {
             return false;
         }
 
@@ -161,8 +161,8 @@ public class MetadataService {
                 .map(m -> m.getKey())
                 .collect(Collectors.toList());
 
-        if (activeFieldsDuplicated.size() > 1) {
-            return "You can not have 2 fields with the same name!";
+        if (activeFieldsDuplicated.size() > 0) {
+            return "You can not have 2 or more fields with the same name!";
         }
 
         loopMetadata:

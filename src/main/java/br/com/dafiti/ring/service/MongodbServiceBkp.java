@@ -306,7 +306,7 @@ public class MongodbServiceBkp {
 
         // creates an array with the number of columns in metadata adding 3 more indexs
         // the 3 aditional fields refers to the default columns to generate tables and collections for manual input
-        // delta_partition, business_ley and load_date
+        // partition_field, business_ley and load_date
         String[] jsonLine = new String[metadataList.size() + 3];
 
         for (int line = 0; line < file.getData().size(); line++) {
@@ -353,14 +353,14 @@ public class MongodbServiceBkp {
                 }
             }
 
-            // add 3 default fields: delta_partition, business_ley and load_date
-            jsonLine[metadataList.size()] = "\"delta_partition\":\"FULL\"";
+            // add 3 default fields: partition_field, business_ley and load_date
+            jsonLine[metadataList.size()] = "\"partition_field\":\"FULL\"";
             // define business key with hash
             if(businessKey.isEmpty()) {
                 businessKey = line + load_date;
             }
             md5.update(businessKey.getBytes());
-            jsonLine[metadataList.size() + 1] = "\"business_key\":\"" + new BigInteger(1, md5.digest()).toString(16) + "\"";
+            jsonLine[metadataList.size() + 1] = "\"custom_primary_key\":\"" + new BigInteger(1, md5.digest()).toString(16) + "\"";
             // set load_date
             jsonLine[metadataList.size() + 2] = "\"load_date\":\"" + load_date + "\"";
 
@@ -466,7 +466,7 @@ public class MongodbServiceBkp {
         command = command.replace("${COLLECTION_NAME}", manualInput.getName());
         command = command.replace("${OUTPUT_FILE}", outputFilePath);
 
-        String fieldList = "business_key,load_date";
+        String fieldList = "custom_primary_key,load_date";
         List<Metadata> sortedMetadata = manualInput.getMetadata()
                 .stream()
                 .sorted((s1, s2) -> s1.getOrdinalPosition().compareTo(s2.getOrdinalPosition()))

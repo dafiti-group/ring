@@ -224,7 +224,7 @@
                                 <input type="hidden" th:field="*{metadata[__${fieldStat.index}__].isActive}" />
                                 <input type="hidden" th:field="*{metadata[__${fieldStat.index}__].ordinalPosition}" />
                                 <input type="hidden" hidden="true" th:field="*{metadata[__${fieldStat.index}__].id}" />
-                                <input type="text" style="text-transform:lowercase" required="true" pattern="[a-z0-9_]*" title="Field name should contain only lower case characters, numbers and underscore! Spaces and special characters are not allowd." class="form-control" th:field="*{metadata[__${fieldStat.index}__].fieldName}"/>
+                                <input type="text" required="true" pattern="[a-z0-9_]*" title="Field name should contain only lower case characters, numbers and underscore! Spaces and special characters are not allowd." class="form-control" th:field="*{metadata[__${fieldStat.index}__].fieldName}"/>
                             </td>
                             <td>
                                 <select class="form-control" th:field="*{metadata[__${fieldStat.index}__].dataType}">

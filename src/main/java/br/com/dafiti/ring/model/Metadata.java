@@ -58,12 +58,13 @@ public class Metadata extends Tracker implements Serializable {
     
     public Metadata() {
         this.isActive = true;
-        this.pending = true;
+        this.pending = false;
         this.isBusinessKey = false;
     }
     
     public Metadata(int ordinalPosition) {
         this();
+        this.pending = true;
         this.ordinalPosition = ordinalPosition;
     }
     
