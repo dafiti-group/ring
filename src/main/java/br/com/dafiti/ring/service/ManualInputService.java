@@ -87,8 +87,7 @@ public class ManualInputService {
      * @return
      */
     public ManualInput FindByName(String name) {
-        return manualInputRepository.findByName(name);
-    }
+        return manualInputRepository.findByName(name);    }
 
     /**
      *
@@ -156,7 +155,7 @@ public class ManualInputService {
                     true,
                     "PROCESS ENDED!");
         } catch (Exception e) {
-            Logger.getLogger(ManualInputService.class.getName()).log(Level.ALL, "Fail processing file!", e);
+            Logger.getLogger(ManualInputService.class.getName()).log(Level.SEVERE, "Fail processing file!", e);
             importLogService.updateLogText(log,
                     ImportLogStatus.ERROR,
                     true,

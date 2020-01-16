@@ -45,6 +45,8 @@ import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
+import org.springframework.web.multipart.MultipartResolver;
+import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.ParameterBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -152,6 +154,22 @@ public class Application/* extends SpringBootServletInitializer*/ {
                                 .required(false)
                                 .build()
                 ));
+    }
+    
+    /**
+     * set max size allowed to upload files
+     * max of 200 MB
+    */
+    @Bean
+    public MultipartResolver fileMultipartResolver() {
+        CommonsMultipartResolver multipartResolver = new CommonsMultipartResolver();
+        
+        multipartResolver.setMaxInMemorySize(200000000);
+        multipartResolver.setMaxUploadSize(200000000);
+        multipartResolver.setMaxUploadSizePerFile(200000000);
+        // 98.593.861
+        // 10.485.760 -- default value
+        return multipartResolver;
     }
 
 }

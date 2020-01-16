@@ -92,32 +92,24 @@ public class FileHandlerService extends JSONDocument {
         this.importLogService = importLogService;
     }
 
-    public FileHandler getFile(ManualInput manualInput, InputStream inputStream, ImportLog log) {
+    public FileHandler getFile(ManualInput manualInput, InputStream inputStream, ImportLog log) throws Exception {
 
-        switch (manualInput.getFileType()) {
-            case CSV:
-                return parseCSVFile(manualInput, inputStream, log);
-            case XLSX:
-                try {
-                return parseXLSXFile(manualInput, inputStream, log);
-            } catch (Exception e) {
-                importLogService.updateLogText(log,
-                        ImportLogStatus.ERROR,
-                        Boolean.TRUE,
-                        "ERROR: " + e.toString());
+        try {
+            switch (manualInput.getFileType()) {
+                case CSV:
+                    return parseCSVFile(manualInput, inputStream, log);
+                case XLSX:
+                    return parseXLSXFile(manualInput, inputStream, log);
+                case GSHEETS:
+                    return processSheets(manualInput, log);
+                default:
+                    return null;
             }
-
-            case GSHEETS:
-                try {
-                return processSheets(manualInput, log);
-            } catch (Exception e) {
-                importLogService.updateLogText(log,
-                        ImportLogStatus.ERROR,
-                        Boolean.TRUE,
-                        "ERROR: " + e.toString());
+        } catch (Exception e) {
+            if (inputStream != null) {
+                inputStream.close();
             }
-            default:
-                return null;
+            throw new Exception(e.toString());
         }
     }
 
@@ -148,7 +140,9 @@ public class FileHandlerService extends JSONDocument {
 
         CsvParser parser = new CsvParser(settings);
         try {
-            return new FileHandler(parser.parseAll(inputStream));
+            List<String[]> csvData = parser.parseAll(inputStream);
+            inputStream.close();
+            return new FileHandler(csvData);
         } catch (Exception ex) {
             importLogService.updateLogText(log,
                     ImportLogStatus.ERROR,
@@ -162,6 +156,10 @@ public class FileHandlerService extends JSONDocument {
     private FileHandler parseXLSXFile(ManualInput manualInput, InputStream inputStream, ImportLog log) throws IOException {
         List<String[]> fileContent = new ArrayList<>();
 
+        importLogService.updateLogText(log,
+                ImportLogStatus.RUNNING,
+                Boolean.FALSE,
+                "Reading XLSX file in sheet " + manualInput.getSheetName() + "..");
         Workbook workbook = new XSSFWorkbook(inputStream);
         org.apache.poi.ss.usermodel.Sheet datatypeSheet = workbook.getSheet(manualInput.getSheetName());
         Iterator<Row> iterator = datatypeSheet.iterator();
@@ -176,7 +174,10 @@ public class FileHandlerService extends JSONDocument {
 
             for (int i = minColIdx; i < maxColIdx; i++) {
                 Cell cell = currentRow.getCell(i);
-                //targetRow[i] = 
+                if (cell == null || cell.getCellType() == null) {
+                    continue;
+                }
+
                 switch (cell.getCellType()) {
                     case STRING:
                         targetRow[i] = cell.getStringCellValue();
@@ -231,6 +232,8 @@ public class FileHandlerService extends JSONDocument {
             fileContent.add(targetRow);
         }
 
+        workbook.close();
+        inputStream.close();
         FileHandler holder = new FileHandler();
         holder.setHeader(fileContent.remove(0));
         holder.setData(fileContent);
