@@ -126,7 +126,7 @@ When  inserting data in Ring, an important point to pay attention is about data 
 **XLSX FILE**
 > Fields formatted as Date in the file should be automaticaly parsed to YYYY-MM-DD HH:MI:SS format during import process, and you should not worry about formatted decimal fields, the process should be able to identify the configurations of an xlsx file.
 
->**Important:** When defining the data type for some field in metadata of a manual input, always use DECIMAL for numerical fields, INTEGER does not works with xlsx files.
+>**Important:** When defining the data type for some field in metadata of a manual input, always use DECIMAL for numerical fields, INTEGER data type is not supported for xlsx files.
 
 **GOOGLE SHEETS**
 > You have to be careful about data in google sheets, because the data is retrieved as it is formatted, so if you have a decimal value formatted as money, the process will get a string value like 'R$ 1.154,12' and extraction will fail if your process if configured to receive a decimal value.
