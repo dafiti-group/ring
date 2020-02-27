@@ -5,6 +5,10 @@
 ###### **That's why Ring was created!** Ring is a tool to keep track of user generated NoSQL data, where you can define a template, upload files and validate uploaded data. This way Ring becomes a new source you can integrate with your tools extracting data via API, and Ring will take care of providing more resilient data to your processes.
 ###### You can define templates to upload CSV file, XLSX file or extract data by connecting to Google Sheets. By default Ring store data in an aws S3 bucket and Ring also has a class to store data in a MongoDB, but you can store data anywhere you want as json file. Ring storage is modular, so you can code a new class extending StorageAbstractionTemplate class implementing the main methods for CRUD operations and then say to StorageManagerService what module to use.
 
+## BPM
+
+![Ring BPM](https://raw.githubusercontent.com/dafiti-group/ring/master/RingBPM.png)
+
 ## Instalation
 
 ##### REQUIREMENTS
