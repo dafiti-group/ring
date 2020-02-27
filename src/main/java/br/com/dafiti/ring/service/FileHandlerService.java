@@ -109,6 +109,7 @@ public class FileHandlerService extends JSONDocument {
             if (inputStream != null) {
                 inputStream.close();
             }
+            e.printStackTrace();
             throw new Exception(e.toString());
         }
     }
@@ -162,6 +163,13 @@ public class FileHandlerService extends JSONDocument {
                 "Reading XLSX file in sheet " + manualInput.getSheetName() + "..");
         Workbook workbook = new XSSFWorkbook(inputStream);
         org.apache.poi.ss.usermodel.Sheet datatypeSheet = workbook.getSheet(manualInput.getSheetName());
+        if(datatypeSheet == null) {
+            importLogService.updateLogText(log,
+                ImportLogStatus.ERROR,
+                Boolean.TRUE,
+                "Could not find sheet with name " + manualInput.getSheetName());
+            return null;
+        }
         Iterator<Row> iterator = datatypeSheet.iterator();
 
         while (iterator.hasNext()) {
@@ -177,7 +185,7 @@ public class FileHandlerService extends JSONDocument {
                 if (cell == null || cell.getCellType() == null) {
                     continue;
                 }
-
+                
                 switch (cell.getCellType()) {
                     case STRING:
                         targetRow[i] = cell.getStringCellValue();

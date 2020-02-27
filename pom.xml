@@ -11,7 +11,7 @@
     <groupId>br.com.dafiti</groupId>
     <artifactId>ring</artifactId>
     <version>0.0.1</version>
-    <packaging>war</packaging>
+    <!--<packaging>war</packaging>-->
     <name>ring</name>
     <description>Ring project for Spring Boot</description>
 
@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
-            <scope>provided</scope>
+            <!--<scope>provided</scope> -->
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -166,13 +166,6 @@
             <version>1.9.3</version>
         </dependency>
         
-        <!-- JSON -->
-        
-        <!-- <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-            <version>20190722</version>
-        </dependency> -->
         
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
@@ -187,13 +180,6 @@
             <artifactId>jersey-client</artifactId>
         </dependency>
         
-        <!-- Guava Cache -->  
-          
-        <!--<dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>24.0-jre</version>
-        </dependency>-->
         
         <dependency>
             <groupId>org.springframework.boot</groupId>

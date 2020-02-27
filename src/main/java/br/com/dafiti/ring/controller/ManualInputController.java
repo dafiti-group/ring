@@ -37,7 +37,6 @@ import br.com.dafiti.ring.service.MetadataService;
 import br.com.dafiti.ring.service.RoleService;
 import br.com.dafiti.ring.service.StorageManagerService;
 import br.com.dafiti.ring.service.UserService;
-import java.io.IOException;
 import java.io.InputStream;
 import java.security.Principal;
 import java.util.HashSet;
@@ -409,7 +408,7 @@ public class ManualInputController {
                 file = multipartFile.getInputStream();
             }
 
-        } catch (IOException ex) {
+        } catch (Exception ex) {
 
             importLogService.updateLogText(log,
                     ImportLogStatus.ERROR,
